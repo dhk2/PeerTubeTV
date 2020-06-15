@@ -60,6 +60,8 @@
     <string name="pref_title_peertube_server">PeerTube Server</string>
     <string name="pref_title_background_play">Background Playback</string>
     <string name="pref_description_background_play">If enabled, continues to play video in background.</string>
+    <string name="pref_title_back_pause">Pause on back button</string>
+    <string name="pref_description_back_pause">Pauses background play when pressing back during video playback.</string>
     <!-- languages -->
     <string name="ab">Abkhazian</string>
     <string name="aa">Afar</string>
@@ -319,6 +321,7 @@
     <string name="account_about_description">Description:</string>
     <string name="account_about_joined">Joined:</string>
     <string name="api_error">Something went wrong, please try later!</string>
+    <string name="api_extended_error">Something went wrong: </string>
     <string name="action_bar_title_server_selection">Select Server</string>
     <!-- Constants, Don't translate -->
     <string name="pref_token_access" translatable="false">pref_token_access</string>

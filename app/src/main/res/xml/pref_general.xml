@@ -44,6 +44,12 @@
         android:summary="@string/pref_description_torrent_player"
         android:defaultValue="false" />
 
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="pref_back_pause"
+        android:summary="@string/pref_description_back_pause"
+        android:title="@string/pref_title_back_pause" />
+
     <Preference
         android:title="@string/pref_title_version"
         android:summary="@string/versionName" />

@@ -172,7 +172,7 @@ public class SelectServerActivity extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Call<ServerList> call, @NonNull Throwable t) {
                 Log.wtf("err", t.fillInStackTrace());
-                Toast.makeText(SelectServerActivity.this, getString(R.string.api_error), Toast.LENGTH_SHORT).show();
+                Toast.makeText(SelectServerActivity.this, getString(R.string.api_extended_error)+t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                 isLoading = false;
                 swipeRefreshLayout.setRefreshing(false);
             }

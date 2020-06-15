@@ -314,7 +314,7 @@ public class VideoListActivity extends CommonActivity {
             @Override
             public void onFailure(@NonNull Call<VideoList> call, @NonNull Throwable t) {
                 Log.wtf("err", t.fillInStackTrace());
-                Toast.makeText(VideoListActivity.this, getString(R.string.api_error), Toast.LENGTH_SHORT).show();
+                Toast.makeText(VideoListActivity.this, getString(R.string.api_extended_error)+t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                 isLoading = false;
                 swipeRefreshLayout.setRefreshing(false);
             }

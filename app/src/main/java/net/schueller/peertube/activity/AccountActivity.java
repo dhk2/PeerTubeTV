@@ -215,7 +215,7 @@ public class AccountActivity extends CommonActivity {
             @Override
             public void onFailure(@NonNull Call<Account> call, @NonNull Throwable t) {
                 Log.wtf(TAG, t.fillInStackTrace());
-                Toast.makeText(AccountActivity.this, getString(R.string.api_error), Toast.LENGTH_SHORT).show();
+                Toast.makeText(AccountActivity.this, getString(R.string.api_extended_error)+t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -258,7 +258,7 @@ public class AccountActivity extends CommonActivity {
             @Override
             public void onFailure(@NonNull Call<VideoList> call, @NonNull Throwable t) {
                 Log.wtf("err", t.fillInStackTrace());
-                Toast.makeText(AccountActivity.this, getString(R.string.api_error), Toast.LENGTH_SHORT).show();
+                Toast.makeText(AccountActivity.this, getString(R.string.api_extended_error)+t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
                 isLoadingVideos = false;
                 swipeRefreshLayoutVideos.setRefreshing(false);
             }
@@ -290,7 +290,7 @@ public class AccountActivity extends CommonActivity {
             @Override
             public void onFailure(@NonNull Call<ChannelList> call, @NonNull Throwable t) {
                 Log.wtf(TAG, t.fillInStackTrace());
-                Toast.makeText(AccountActivity.this, getString(R.string.api_error), Toast.LENGTH_SHORT).show();
+                Toast.makeText(AccountActivity.this, getString(R.string.api_extended_error)+t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

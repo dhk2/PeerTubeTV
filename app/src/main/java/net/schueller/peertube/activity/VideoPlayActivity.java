@@ -198,5 +198,18 @@ public class VideoPlayActivity extends AppCompatActivity {
 
         Log.v(TAG, "onStart()...");
     }
+    @Override
+    public void onBackPressed() {
 
+    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        Log.v(TAG, "" + sharedPref.getBoolean("pref_back_pause",true));
+        if (sharedPref.getBoolean("pref_back_pause", true)) {
+            VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment)
+                    getSupportFragmentManager().findFragmentById(R.id.video_player_fragment);
+            assert videoPlayerFragment != null;
+            videoPlayerFragment.pauseVideo();
+        }
+        Log.v(TAG, "onBackPressed()...");
+        super.onBackPressed();
+    }
 }

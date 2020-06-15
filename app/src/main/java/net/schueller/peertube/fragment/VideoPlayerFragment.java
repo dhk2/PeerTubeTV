@@ -182,7 +182,8 @@ public class VideoPlayerFragment extends Fragment implements VideoRendererEventL
                 mService.setCurrentVideo(video);
 
                 if (video == null) {
-                    Toast.makeText(context, "Something went wrong...Please try later!", Toast.LENGTH_SHORT).show();
+        //            Toast.makeText(context, "Something went wrong...Please try later!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, "bite it!", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -193,7 +194,7 @@ public class VideoPlayerFragment extends Fragment implements VideoRendererEventL
             @Override
             public void onFailure(@NonNull Call<Video> call, @NonNull Throwable t) {
                 Log.wtf(TAG, t.fillInStackTrace());
-                Toast.makeText(context, "Something went wrong...Please try later!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "Something happened: "+t.getLocalizedMessage(), Toast.LENGTH_LONG).show();
             }
         });
     }
@@ -258,6 +259,10 @@ public class VideoPlayerFragment extends Fragment implements VideoRendererEventL
             Objects.requireNonNull(getContext()).unbindService(mConnection);
             mBound = false;
         }
+    }
+
+    public void pauseVideo() {
+        mService.player.setPlayWhenReady(false);
     }
 
     public void setIsFullscreen(Boolean fullscreen) {
