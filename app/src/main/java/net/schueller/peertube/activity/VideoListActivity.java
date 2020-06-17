@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.preference.PreferenceManager;
 import android.provider.SearchRecentSuggestions;
 
@@ -145,6 +146,7 @@ public class VideoListActivity extends CommonActivity {
         searchView.setIconifiedByDefault(false); // Do not iconify the widget; expand it by default
         searchView.setQueryRefinementEnabled(true);
 
+
         searchMenuItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem menuItem) {
@@ -166,6 +168,34 @@ public class VideoListActivity extends CommonActivity {
             Log.d(TAG, "onDismiss: ");
             loadVideos(0, count, sort, filter);
         });
+
+        searchView.setOnSuggestionListener(new SearchView.OnSuggestionListener() {
+            @Override
+            public boolean onSuggestionClick(int position) {
+                String suggestion = getSuggestion(position);
+                searchView.setQuery(suggestion, true); // submit query now
+                return true; // replace default search manager behaviour
+            }
+
+            private String getSuggestion(int position) {
+                Cursor cursor = (Cursor) searchView.getSuggestionsAdapter().getItem(
+                        position);
+                String suggest1 = cursor.getString(cursor
+                        .getColumnIndex(SearchManager.SUGGEST_COLUMN_TEXT_1));
+                return suggest1;
+            }
+            @Override
+            public boolean onSuggestionSelect(int position) {
+                /* Write your code */
+                return true;
+            }
+        });
+
+
+
+
+
+
 
         return true;
     }
@@ -342,7 +372,6 @@ public class VideoListActivity extends CommonActivity {
     private void handleIntent(Intent intent) {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
-
             SearchRecentSuggestions suggestions = new SearchRecentSuggestions(this,
                     SearchSuggestionsProvider.AUTHORITY,
                     SearchSuggestionsProvider.MODE);
