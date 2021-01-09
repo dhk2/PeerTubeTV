@@ -1,14 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="net.schueller.peertube">
+    package="net.anticlimacticteleservices.peertube">
     <!-- required to play video in background via notification -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- connect to peertube server -->
     <uses-permission android:name="android.permission.INTERNET" /> <!-- required for torrent downloading -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-feature
+        android:name="android.software.leanback"
+        android:required="true" />
+    <uses-feature
+        android:name="android.hardware.touchscreen"
+        android:required="false" />
 
     <application
-        android:name=".application.AppApplication"
+        android:name="net.anticlimacticteleservices.peertube.application.AppApplication"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_descriptor"
         android:icon="@mipmap/ic_launcher"
@@ -19,15 +25,15 @@
 
         <!-- Server Address Book -->
         <activity
-            android:name=".activity.ServerAddressBookActivity"
+            android:name="net.anticlimacticteleservices.peertube.activity.ServerAddressBookActivity"
             android:label="@string/title_activity_server_address_book"
             android:theme="@style/AppTheme.NoActionBar" /> <!-- Video Lists -->
         <activity
-            android:name=".activity.VideoListActivity"
+            android:name="net.anticlimacticteleservices.peertube.activity.VideoListActivity"
             android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+
                 <action android:name="android.intent.action.SEARCH" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -36,37 +42,53 @@
             <meta-data
                 android:name="android.app.searchable"
                 android:resource="@xml/searchable" />
-        </activity> <!-- Video Player -->
+        </activity>
+
+        <!-- TV activity -->
         <activity
-            android:name=".activity.VideoPlayActivity"
+            android:name="net.anticlimacticteleservices.peertube.activity.TvActivity"
+            android:banner="@mipmap/banner2"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Leanback"
+            android:screenOrientation="landscape">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Video Player -->
+        <activity
+            android:name="net.anticlimacticteleservices.peertube.activity.VideoPlayActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"
             android:label="@string/title_activity_video_play"
             android:launchMode="singleInstance"
             android:supportsPictureInPicture="true"
-            android:theme="@style/AppTheme.NoActionBar" /> <!-- Settings -->
+            android:theme="@style/AppTheme.NoActionBar"/> <!-- Settings -->
         <activity
-            android:name=".activity.SettingsActivity"
+            android:name="net.anticlimacticteleservices.peertube.activity.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:theme="@style/AppTheme.NoActionBar" /> <!-- Server Selection -->
         <activity
-            android:name=".activity.SearchServerActivity"
+            android:name="net.anticlimacticteleservices.peertube.activity.SearchServerActivity"
             android:label="@string/title_activity_select_server"
             android:theme="@style/AppTheme.NoActionBar" /> <!-- Me -->
         <activity
-            android:name=".activity.MeActivity"
+            android:name="net.anticlimacticteleservices.peertube.activity.MeActivity"
             android:label="@string/title_activity_me"
             android:theme="@style/AppTheme.NoActionBar" /> <!-- Account -->
         <activity
-            android:name=".activity.AccountActivity"
+            android:name="net.anticlimacticteleservices.peertube.activity.AccountActivity"
             android:label="@string/title_activity_account"
             android:theme="@style/AppTheme.NoActionBar" /> <!-- Content provider for search suggestions -->
         <provider
-            android:name=".provider.SearchSuggestionsProvider"
-            android:authorities="net.schueller.peertube.provider.SearchSuggestionsProvider"
+            android:name="net.anticlimacticteleservices.peertube.provider.SearchSuggestionsProvider"
+            android:authorities="net.anticlimacticteleservices.peertube.provider.SearchSuggestionsProvider"
             android:enabled="true"
             android:exported="false" />
 
-        <service android:name=".service.VideoPlayerService" />
+        <service android:name="net.anticlimacticteleservices.peertube.service.VideoPlayerService" />
     </application>
 
 </manifest>

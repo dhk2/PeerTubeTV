@@ -37,16 +37,16 @@
         android:layout_above="@+id/navigation"
         android:layout_below="@+id/appbar"
         android:layout_weight="1"
+        android:orientation="horizontal"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-           >
+            android:orientation="horizontal">
 
         </androidx.recyclerview.widget.RecyclerView>
-
 
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

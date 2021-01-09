@@ -6,31 +6,33 @@
     android:keepScreenOn="true"
     tools:context="net.anticlimacticteleservices.peertube.activity.VideoPlayActivity">
 
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <RelativeLayout
 
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <fragment android:name="net.anticlimacticteleservices.peertube.fragment.VideoPlayerFragment"
-            android:id="@+id/video_player_fragment"
+        <fragment
+            android:id="@+id/webview_fragment"
+            android:name="net.anticlimacticteleservices.peertube.fragment.WebviewFragment"
             android:layout_width="match_parent"
-            android:layout_height="250dp" />
+            android:layout_height="match_parent" />
 
 
         <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_below="@id/video_player_fragment"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/webview_fragment"
             android:orientation="vertical">
 
             <ScrollView
                 android:id="@+id/login_form"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
 
-                <fragment android:name="net.anticlimacticteleservices.peertube.fragment.VideoMetaDataFragment"
+                <fragment
                     android:id="@+id/video_meta_data_fragment"
-                    android:layout_width="match_parent"
+                    android:name="net.anticlimacticteleservices.peertube.fragment.VideoMetaDataFragment"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
 
             </ScrollView>

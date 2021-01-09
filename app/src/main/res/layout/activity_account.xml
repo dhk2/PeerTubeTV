@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="net.schueller.peertube.activity.AccountActivity">
+    tools:context="net.anticlimacticteleservices.peertube.activity.AccountActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/account_appbar"

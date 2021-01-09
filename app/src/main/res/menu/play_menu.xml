@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item
+        android:id="@+id/halfspeed"
+        android:title="halfspeed" />
+    <item android:id="@+id/normalspeed"
+        android:title="normal speed" />
+    <item android:id="@+id/doublespeed"
+        android:title="doublespeed" />
+    <item android:id="@+id/dumb"
+        android:title="dumb" />
+    <item android:id="@+id/video_details"
+        android:title="video details" />
+    <item android:id="@+id/cancel"
+        android:title="cancel" />
+</menu>

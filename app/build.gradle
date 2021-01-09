@@ -157,4 +157,7 @@ dependencies {
     annotationProcessor "androidx.lifecycle:lifecycle-common-java8:$archLifecycleVersion"
 
     implementation 'androidx.preference:preference:1.1.1'
+    implementation 'androidx.leanback:leanback:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.github.bumptech.glide:glide:3.8.0'
 }
