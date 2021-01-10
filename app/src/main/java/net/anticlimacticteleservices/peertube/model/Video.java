@@ -23,7 +23,7 @@ import android.support.v4.media.MediaDescriptionCompat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class Video {
+public class Video implements Comparable<Video> {
 
     private Integer id;
     private String uuid;
@@ -294,4 +294,14 @@ public class Video {
 //                 .placeholder(R.drawable.ic_peertube)
 //                 .error(R.drawable.ic_peertube).get();
 //    }
+
+    @Override
+    public int compareTo(Video o) {
+        long tt=this.updatedAt.getTime();
+        long ot =this.updatedAt.getTime();
+
+        return ((tt>ot)  ? -1 :
+                (tt==ot) ? 0 : 1);
+
+    }
 }

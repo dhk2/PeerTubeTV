@@ -14,6 +14,7 @@
         android:required="false" />
 
     <application
+        android:banner="@mipmap/banner2"
         android:name="net.anticlimacticteleservices.peertube.application.AppApplication"
         android:allowBackup="true"
         android:fullBackupContent="@xml/backup_descriptor"

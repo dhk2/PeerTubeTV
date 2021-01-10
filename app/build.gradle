@@ -34,7 +34,7 @@ else {
 android {
     compileSdkVersion 29
     defaultConfig {
-        applicationId "net.schueller.peertube"
+        applicationId "net.anticlimacticteleservices.peertube"
         minSdkVersion 21
         targetSdkVersion 29
         versionCode Integer.valueOf(System.getenv("VERSION_CODE") ?: 1)
