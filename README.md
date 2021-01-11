@@ -1,5 +1,5 @@
-<h1 align="center">
-  Thorium, an Android PeerTube Client 
+<h1 align="center">PeerTubeTV<br>
+  forked from Thorium, an Android PeerTube Client 
 </h1>
 
 <p align="center">
@@ -11,10 +11,6 @@
 <a href="https://liberapay.com/sschueller/donate" alt="Donate Link"><img src="http://img.shields.io/liberapay/patrons/sschueller.svg?logo=liberapay"></a>
 </p>
 
-## Screenshots
-[<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/shot_01.png" width=160>](fastlane/metadata/android/en-US/images/phoneScreenshots/shot_01.png)
-[<img src="fastlane/metadata/android/en-US/images/phoneScreenshots/shot_02.png" width=160>](fastlane/metadata/android/en-US/images/phoneScreenshots/shot_02.png)
-
 ## Description
 PeerTube is a federated video streaming platform that is community-owned and ad-free, with no vendor lock-in. This client allows you to watch and browse videos on a server of your choice in the PeerTube network.
 
@@ -24,11 +20,8 @@ Please note this is app is in beta and is still missing a lot of features.
 
 
 ## Download
-* Beta Test on Google Play: https://play.google.com/store/apps/details?id=net.schueller.peertube
-* F-Droid: https://f-droid.org/packages/net.schueller.peertube/
+* Beta Test on Google Play: https://play.google.com/store/apps/details?id=net.anticlimacticteleservices.peertube
 
-## Help Translate
-* https://hosted.weblate.org/projects/peertube/
 
 ## Features
 
