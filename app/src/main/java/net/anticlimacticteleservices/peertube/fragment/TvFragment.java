@@ -53,6 +53,7 @@ import net.anticlimacticteleservices.peertube.network.Session;
 import net.anticlimacticteleservices.peertube.presenter.CardPresenter;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -97,11 +98,15 @@ public class TvFragment extends BrowseFragment {
     private ArrayList<LeanBackHeaderCategory> ui;
     private TextView emptyView;
     private RecyclerView recyclerView;
+    private String currentRow;
+    private Video currentVideo;
+    private long currentRowNumber;
     LeanBackHeaderCategory head;
     private int isLoading = 0;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
+
         Log.i(TAG, "onCreate");
         super.onActivityCreated(savedInstanceState);
         Log.i(TAG, "getting videos");
@@ -129,6 +134,7 @@ public class TvFragment extends BrowseFragment {
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void initVideos() {
         ui=new ArrayList<LeanBackHeaderCategory>();
+
         head = new LeanBackHeaderCategory("Chronological");
         head.setLoading(true);
         pullVideos(head,0,10,"-createdAt",null);
@@ -150,6 +156,7 @@ public class TvFragment extends BrowseFragment {
         head.setLoading(true);
         pullVideos(head,0,10,"-views",null);
         ui.add(head);
+
         head = new LeanBackHeaderCategory("Most Liked");
         head.setLoading(true);
         pullVideos(head,0,10,"-likes",null);
@@ -158,7 +165,7 @@ public class TvFragment extends BrowseFragment {
     }
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void loadRows() {
-
+        int selected=-1;
         ArrayObjectAdapter rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
         CardPresenter cardPresenter = new CardPresenter();
 
@@ -168,6 +175,11 @@ public class TvFragment extends BrowseFragment {
             if (head.getVideos().size()>0) {
                 for (Video item : head.getVideos()) {
                     listRowAdapter.add(item);
+                    if ((null != currentVideo) && (currentVideo.equals((Video)item))){
+                        if (selected<0 && currentRow.equals(head.getName())){
+                            selected = (listRowAdapter.size() - 1);
+                        }
+                    }
                 }
                 HeaderItem headerItem = new HeaderItem(head.getName());
                 rowsAdapter.add(new ListRow(headerItem, listRowAdapter));
@@ -185,36 +197,64 @@ public class TvFragment extends BrowseFragment {
         rowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
 
         setAdapter(rowsAdapter);
+        if (selected>0){
+            this.setSelectedPosition((int) currentRowNumber, false, new ListRowPresenter.SelectItemViewHolderTask(selected));
+        }
         if (Session.getInstance().isLoggedIn() && !subscriptions) {
 
             subscriptions=true;
-            head = new LeanBackHeaderCategory("Subscribed");
-            head.setLoading(true);
+            LeanBackHeaderCategory headsub = new LeanBackHeaderCategory("Subscriptions");
+            headsub.setLoading(true);
             String apiBaseURL = APIUrlHelper.getUrlWithVersion(getContext());
             GetUserService userService = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetUserService.class);
             Call<VideoList> call;
             call = userService.getVideosSubscripions(0,50, "-createdAt");
-            Log.d("WTF","subscription URL Called"+ call.request().url() + "");
+
+            Log.d("WTF","subscriptions URL Called"+ call.request().url() + "");
             call.enqueue(new Callback<VideoList>() {
                 @Override
                 public void onResponse(@NonNull Call<VideoList> call, @NonNull Response<VideoList> response) {
                     if (response.body() != null) {
                         ArrayList<Video> videoList = response.body().getVideoArrayList();
                         if (videoList != null) {
-                            Log.e("wtf", head.getName()+"subscription adding "+videoList.size());
+                            Log.e("wtf", head.getName()+"subscriptions adding "+videoList.size());
+                            headsub.addAllVideo(videoList);
+                            loadRows();
+                            headsub.setLoading(false);
+                        }
+                    }
+                    Log.e("WTF","subscripotions failed to load");
+                    headsub.setLoading(false);
+                }
+                @Override
+                public void onFailure(Call<VideoList> call, Throwable t) {
+                }
+            });
+            ui.add(0,headsub);
+            head = new LeanBackHeaderCategory("History");
+            head.setLoading(true);
+            call = userService.getVideosHistory(0,50, null);
+
+            Log.d("WTF","history URL Called"+ call.request().url() + "");
+            call.enqueue(new Callback<VideoList>() {
+                @Override
+                public void onResponse(@NonNull Call<VideoList> call, @NonNull Response<VideoList> response) {
+                    if (response.body() != null) {
+                        ArrayList<Video> videoList = response.body().getVideoArrayList();
+                        if (videoList != null) {
+                            Log.e("wtf", head.getName()+"history adding "+videoList.size());
                             head.addAllVideo(videoList);
                             loadRows();
                         }
                     }
-                    Log.e("WTF","subscripotions failed to load");
+                    Log.e("WTF","history failed to load");
                     head.setLoading(false);
                 }
                 @Override
                 public void onFailure(Call<VideoList> call, Throwable t) {
                 }
             });
-            ui.add(0,head);
-           // ui.add(head);
+            ui.add(head);
         }
     }
 
@@ -231,10 +271,10 @@ public class TvFragment extends BrowseFragment {
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void setupUIElements() {
-        // setBadgeDrawable(getActivity().getResources().getDrawable(
-        // R.drawable.videos_by_google_banner));
+         setBadgeDrawable(getActivity().getResources().getDrawable(
+         R.mipmap.banner2));
 
-        setTitle("PeerTubeTV"); // Badge, when set, takes precedent
+        //setTitle("PeerTubeTV"); // Badge, when set, takes precedent
         // over title
         setHeadersState(HEADERS_ENABLED);
         setHeadersTransitionOnBackEnabled(true);
@@ -328,6 +368,7 @@ public class TvFragment extends BrowseFragment {
     }
 
     private final class ItemViewSelectedListener implements OnItemViewSelectedListener {
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void onItemSelected(
                 Presenter.ViewHolder itemViewHolder,
@@ -335,8 +376,62 @@ public class TvFragment extends BrowseFragment {
                 RowPresenter.ViewHolder rowViewHolder,
                 Row row) {
             if (item instanceof Video) {
-                mBackgroundUri = ((Video) item).getThumbnailPath();
-                startBackgroundTimer();
+                currentRow= row.getHeaderItem().getName();
+                currentVideo = ((Video) item);
+                for (LeanBackHeaderCategory lbh:ui){
+                    if (lbh.getName().equals(currentRow)){
+                        currentRowNumber=ui.indexOf(lbh);
+                    }
+                }
+                row.getHeaderItem().getName();
+                try {
+                    mBackgroundUri = currentVideo.getAccount().getHost() + currentVideo.getThumbnailPath();
+                }
+                catch(NullPointerException e)
+                {
+                    System.out.print("NullPointerException Caught");
+                }
+                int rowPosition=0;
+                int rowSize=0;
+                for (LeanBackHeaderCategory test:ui){
+                    if ((!test.isLoading()) && (test.getName().equals(currentRow))){
+                        rowPosition = test.getVideos().indexOf((Video)item);
+                        rowSize = test.getVideos().size();
+                        Log.e("WTF",rowPosition+" of "+rowSize+ "current row "+currentRowNumber+"  "+currentVideo.getName());
+                        if ((rowSize-rowPosition)<10){
+                            switch (test.getName()) {
+                                case "Chronological":
+                                    test.setLoading(true);
+                                    pullVideos(test, rowSize+1, 40, "-createdAt", null);
+                                    break;
+                                case "Local":
+                                    test.setLoading(true);
+                                    pullVideos(test, rowSize+1, 40, "-createdAt", "local");
+                                    break;
+                                case "Trending":
+                                    test.setLoading(true);
+                                    pullVideos(test, rowSize+1, 40, "-trending", null);
+                                    break;
+                                case "Most Viewed":
+                                    test.setLoading(true);
+                                    pullVideos(test, rowSize+1, 40, "-views", null);
+                                    break;
+                                case "Most Liked":
+                                    test.setLoading(true);
+                                    pullVideos(test, rowSize+1, 40, "-likes", null);
+                                    break;
+                                case "Subscriptions":
+                                    test.setLoading(true);
+                                    pullVideos(test,rowSize+1,40,"Subscriptions",null);
+                                    break;
+                                case "History":
+                                    test.setLoading(true);
+                                    pullVideos(test,rowSize+1,40,"History",null);
+                                    break;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -385,9 +480,15 @@ public class TvFragment extends BrowseFragment {
         Set<String> languages = sharedPref.getStringSet(getString(R.string.pref_video_language_key), null);
         String apiBaseURL = APIUrlHelper.getUrlWithVersion(getContext());
         GetVideoDataService service = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetVideoDataService.class);
-
+        GetUserService userService = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetUserService.class);
         Call<VideoList> call;
-        call = service.getVideosData(0, count, sort, nsfw, filter, languages);
+        if (sort.equals("Subscriptions")){
+            call = userService.getVideosSubscripions(start,count, "-createdAt");
+        } else if (sort.equals("History")){
+            call = userService.getVideosHistory(start,count, null);
+        }else {
+            call = service.getVideosData(start, count, sort, nsfw, filter, languages);
+        }
         /*Log the URL called*/
         Log.d("URL Called", call.request().url() + "");
    //     Toast.makeText(getContext(), "URL Called: " + call.request().url(), Toast.LENGTH_SHORT).show();
@@ -399,7 +500,7 @@ public class TvFragment extends BrowseFragment {
                     ArrayList<Video> videoList = response.body().getVideoArrayList();
                     header.setLoading(false);
                     if (videoList != null) {
-                        Log.e("wtf", header.getName()+" adding "+videoList.size());
+                        Log.e("wtf", header.getName()+" adding "+videoList.size()+" to "+header.getName());
                         header.addAllVideo(videoList);
                         loadRows();
                     }
@@ -423,7 +524,7 @@ public class TvFragment extends BrowseFragment {
                                 break;
                             case "Most Liked":
                                 header.setLoading(true);
-                                pullVideos(header, 11, 40, "-liked", null);
+                                pullVideos(header, 11, 40, "-likes", null);
                                 break;
                         }
                     }
@@ -437,6 +538,9 @@ public class TvFragment extends BrowseFragment {
                 Log.wtf("err", t.fillInStackTrace());
             }
         });
+    }
+    public void setTitle(String title){
+        setTitle(title);
     }
 
 }

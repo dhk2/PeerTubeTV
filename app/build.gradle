@@ -37,8 +37,8 @@ android {
         applicationId "net.anticlimacticteleservices.peertube"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode Integer.valueOf(System.getenv("VERSION_CODE") ?: 1)
-        versionName System.getenv("VERSION_NAME") + "-" + System.getenv("VERSION_SHA")
+        versionCode 4
+        versionName "alpha 4"
         buildConfigField "long", "BUILD_TIME", readPropertyWithDefault('buildTimestamp', System.currentTimeMillis()) + 'L'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         ext {

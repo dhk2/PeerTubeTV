@@ -22,6 +22,13 @@ public interface GetUserService {
             @Query("sort") String sort
     );
 
+    @GET("users/me/history/videos")
+    Call<VideoList> getVideosHistory(
+            @Query("start") int start,
+            @Query("count") int count,
+            @Query("search") String sort
+    );
+
 
     @GET("accounts/{displayName}")
     Call<Account> getAccount(

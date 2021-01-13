@@ -15,6 +15,10 @@ import com.bumptech.glide.Glide;
 import net.anticlimacticteleservices.peertube.R;
 import net.anticlimacticteleservices.peertube.model.Video;
 
+import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /*
  * A CardPresenter is used to generate Views and bind Objects to them on demand.
  * It contains an Image CardView
@@ -94,8 +98,42 @@ public class CardPresenter extends Presenter {
 
         Log.d(TAG, "onBindViewHolder");
         if (movie.getName() != null) {
-            cardView.setTitleText(movie.getName());
-            cardView.setContentText(movie.getAccount().getDisplayName());
+            long millisLeft=movie.getDuration()*1000l;
+            Log.e("WTF", String.valueOf(millisLeft));
+            String hour =  String.format("%02d", millisLeft/(3600l*1000l));
+            String minute = String.format("%02d",millisLeft/(60l*1000l) % 60l);
+            String second = String.format("%02d",millisLeft/1000l % 60l);
+            String dateString ="";
+            String iconString="";
+            if (hour.equals("00")){
+                dateString="";
+            } else if (hour.startsWith("0")){
+                dateString=hour.substring(1)+":";
+            } else {
+                dateString=hour+":";
+            }
+
+            if (minute.startsWith("0") && (dateString.isEmpty())){
+                dateString=dateString+minute.substring(1)+":";
+            } else {
+                dateString=dateString+minute+":";
+            }
+            dateString=dateString+second;
+            Log.e("WTF", dateString);
+            if (movie.getViews()>0) {
+                iconString= " \uD83D\uDC41" + movie.getViews();
+            }
+            if (movie.getLikes()>0){
+                iconString=iconString+" \uD83D\uDC4D"+movie.getLikes();
+            }
+            if (movie.getDislikes()>0){
+                iconString=iconString+" \uD83D\uDC4E"+movie.getDislikes();
+            }
+            if (movie.getNsfw()){
+                iconString=iconString+"\uD83D\uDD1E";
+            }
+            cardView.setTitleText(iconString+"  "+movie.getName());
+            cardView.setContentText(dateString+"  "+movie.getAccount().getDisplayName());
             cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
             Log.i(TAG,"thumbnailpath "+movie.getAccount().getHost()+movie.getThumbnailPath());
             //TODO fix this properly
