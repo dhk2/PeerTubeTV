@@ -10,6 +10,7 @@ public class LeanBackHeaderCategory implements Serializable {
     String name;
     boolean isLoading;
     ArrayList<Video> videos;
+    int adapterIndex;
 
 
 
@@ -73,5 +74,13 @@ public class LeanBackHeaderCategory implements Serializable {
         } else {
             this.videos.addAll(toAdd);
         }
+    }
+
+    public int getAdapterIndex() {
+        return adapterIndex;
+    }
+
+    public void setAdapterIndex(int adapterIndex) {
+        this.adapterIndex = adapterIndex;
     }
 }

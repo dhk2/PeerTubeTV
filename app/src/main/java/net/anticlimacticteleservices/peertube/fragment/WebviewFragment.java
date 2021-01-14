@@ -61,6 +61,8 @@ public class WebviewFragment extends Fragment {
     private Boolean isFullscreen = false;
     private static WebView webView;
     private static Video video;
+    private static long smashes;
+    Boolean fuckThis=true;
     public static Button getMoreButton() { return moreButton; }
 
     private static Button moreButton;
@@ -144,6 +146,7 @@ public class WebviewFragment extends Fragment {
                                 webView.loadUrl("javascript:videojsPlayer.play()");
                                 return true;
                             case R.id.dumb:
+                                /*
                                 webView.evaluateJavascript("videojsPlayer.networkState() ", new ValueCallback<String>() {
                                     @Override
                                     public void onReceiveValue(String s) {
@@ -152,7 +155,9 @@ public class WebviewFragment extends Fragment {
                                     }
                                 });
                                 return true;
-                            case R.id.video_details:
+
+                                 */
+                            /*case R.id.video_details:
                                 webView.evaluateJavascript("Android.debug('test')", new ValueCallback<String>() {
                                     @Override
                                     public void onReceiveValue(String s) {
@@ -161,7 +166,9 @@ public class WebviewFragment extends Fragment {
                                     }
                                 });
                                 return true;
+                            */
                             case R.id.cancel:
+
                                 Log.e("WTF","figure out cancel");
                                 return true;
                             default:
@@ -201,20 +208,19 @@ public class WebviewFragment extends Fragment {
                         if (progress == 100) {
                             Log.e("WTF", "progress " + progress);
                             webView.requestFocus();
-                            webView.evaluateJavascript("videojsPlayer.play() ", new ValueCallback<String>() {
-                                @Override
-                                public void onReceiveValue(String s) {
-                                    Log.d("WTF", s); // Print "test"
-                                    // data = s; // The value that I would like to return
-                                }
-                            });
+                            fuckThis=true;
+                            playVideo();
                         }
                     }
                 });
 
                 webView.loadUrl("https://" + playerURL);
+                 //webView.loadUrl("file:///android_asset/downloader.html");
 
-                // webView.loadUrl("file:///android_asset/downloader.html");
+
+
+
+
                 webView.addJavascriptInterface(new JavascriptWebviewInterface(getContext()), "Android");
 
             }
@@ -238,5 +244,22 @@ public class WebviewFragment extends Fragment {
     public static WebView getWebView() {return webView;}
     public static Seed getSeed(){
         return new Seed(video,webView);
+    }
+    // none of the listeners for ready or done work, brute force FTW
+    public void playVideo(){
+        webView.evaluateJavascript("javascript:videojsPlayer.play() ", new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String s) {
+                //kludge because null, empty, and direct comparison all failed, but null returns as 4 long and empty returns as 2 long
+                if (s.length()>2) {
+                    smashes++;
+                    playVideo();
+                }
+                else{
+                    Log.d("WTF", "exiting smash loop after "+smashes +" smashes because finally got <" + s+">"+s.length());
+                }
+
+            }
+        });
     }
 }

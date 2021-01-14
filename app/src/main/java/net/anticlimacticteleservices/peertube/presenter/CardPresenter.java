@@ -1,11 +1,13 @@
 package net.anticlimacticteleservices.peertube.presenter;
 
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
+import android.content.Context;
 import androidx.core.content.ContextCompat;
 import androidx.leanback.widget.ImageCardView;
 import androidx.leanback.widget.Presenter;
@@ -135,8 +137,9 @@ public class CardPresenter extends Presenter {
             cardView.setTitleText(iconString+"  "+movie.getName());
             cardView.setContentText(dateString+"  "+movie.getAccount().getDisplayName());
             cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
+
+            //TODO support blurring of thumbnail based on user account settings.
             Log.i(TAG,"thumbnailpath "+movie.getAccount().getHost()+movie.getThumbnailPath());
-            //TODO fix this properly
             Glide.with(viewHolder.view.getContext())
                     .load("https://"+movie.getAccount().getHost()+movie.getThumbnailPath())
                     .centerCrop()

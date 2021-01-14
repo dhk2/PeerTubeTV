@@ -25,6 +25,7 @@ import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.HeaderItem;
 import androidx.leanback.widget.ListRow;
 import androidx.leanback.widget.ListRowPresenter;
+import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.OnItemViewClickedListener;
 import androidx.leanback.widget.OnItemViewSelectedListener;
 import androidx.leanback.widget.Presenter;
@@ -41,6 +42,7 @@ import net.anticlimacticteleservices.peertube.R;
 import net.anticlimacticteleservices.peertube.activity.AccountActivity;
 import net.anticlimacticteleservices.peertube.activity.ServerAddressBookActivity;
 import net.anticlimacticteleservices.peertube.activity.SettingsActivity;
+import net.anticlimacticteleservices.peertube.activity.TvActivity;
 import net.anticlimacticteleservices.peertube.activity.VideoPlayActivity;
 import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
 import net.anticlimacticteleservices.peertube.model.LeanBackHeaderCategory;
@@ -101,8 +103,9 @@ public class TvFragment extends BrowseFragment {
     private String currentRow;
     private Video currentVideo;
     private long currentRowNumber;
-    LeanBackHeaderCategory head;
+    private LeanBackHeaderCategory head;
     private int isLoading = 0;
+    public  boolean forceRefresh;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -182,7 +185,11 @@ public class TvFragment extends BrowseFragment {
                     }
                 }
                 HeaderItem headerItem = new HeaderItem(head.getName());
-                rowsAdapter.add(new ListRow(headerItem, listRowAdapter));
+                ListRow toAdd = new ListRow(headerItem, listRowAdapter);
+                rowsAdapter.add(toAdd);
+                head.setAdapterIndex(rowsAdapter.indexOf(toAdd));
+                Log.e("wth",head.getAdapterIndex()+" should be "+head.getName());
+
             }
         }
 
@@ -217,13 +224,14 @@ public class TvFragment extends BrowseFragment {
                     if (response.body() != null) {
                         ArrayList<Video> videoList = response.body().getVideoArrayList();
                         if (videoList != null) {
-                            Log.e("wtf", head.getName()+"subscriptions adding "+videoList.size());
+                            Log.e("wtf", head.getName()+" is getting response subscriptions adding "+videoList.size());
                             headsub.addAllVideo(videoList);
-                            loadRows();
+                            //loadRows();
                             headsub.setLoading(false);
                         }
+                    } else {
+                        Log.e("WTF", "subscripotions failed to load");
                     }
-                    Log.e("WTF","subscripotions failed to load");
                     headsub.setLoading(false);
                 }
                 @Override
@@ -242,12 +250,15 @@ public class TvFragment extends BrowseFragment {
                     if (response.body() != null) {
                         ArrayList<Video> videoList = response.body().getVideoArrayList();
                         if (videoList != null) {
-                            Log.e("wtf", head.getName()+"history adding "+videoList.size());
+                            Log.e("wtf", head.getName()+" is getting response history adding "+videoList.size());
                             head.addAllVideo(videoList);
                             loadRows();
+                            head.setLoading(false);
                         }
                     }
-                    Log.e("WTF","history failed to load");
+                    else {
+                        Log.e("WTF", "history failed to load");
+                    }
                     head.setLoading(false);
                 }
                 @Override
@@ -255,6 +266,7 @@ public class TvFragment extends BrowseFragment {
                 }
             });
             ui.add(head);
+
         }
     }
 
@@ -356,11 +368,11 @@ public class TvFragment extends BrowseFragment {
                 if (item.equals("Refresh")){
                     ui=new ArrayList<LeanBackHeaderCategory>();
                     subscriptions=false;
-                   /* Intent intent = new Intent(getContext(), TvActivity.class);
+                    Intent intent = new Intent(getContext(), TvActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     getContext().startActivity(intent);
                     Runtime.getRuntime().exit(0);
-                    */
+
                     initVideos();
                 }
             }
@@ -466,9 +478,12 @@ public class TvFragment extends BrowseFragment {
 
         @Override
         public void onBindViewHolder(ViewHolder viewHolder, Object item) {
-            ((TextView) viewHolder.view).setText((String) item);
+            if (item instanceof Video) {
+                ((TextView) viewHolder.view).setText(((Video) item).getName());
+            } else {
+                ((TextView) viewHolder.view).setText((String) item);
+            }
         }
-
         @Override
         public void onUnbindViewHolder(ViewHolder viewHolder) {
         }
@@ -500,34 +515,20 @@ public class TvFragment extends BrowseFragment {
                     ArrayList<Video> videoList = response.body().getVideoArrayList();
                     header.setLoading(false);
                     if (videoList != null) {
-                        Log.e("wtf", header.getName()+" adding "+videoList.size()+" to "+header.getName());
+                        Log.e("wth", header.getName()+" adding "+videoList.size()+" to "+header.getName()+" at index "+header.getAdapterIndex());
                         header.addAllVideo(videoList);
-                        loadRows();
-                    }
-                    if (header.getVideos().size()<30){
-                        switch (header.getName()) {
-                            case "Chronological":
-                                header.setLoading(true);
-                                pullVideos(header, 11, 40, "-createdAt", null);
-                                break;
-                            case "Local":
-                                header.setLoading(true);
-                                pullVideos(header, 11, 40, "-createdAt", "local");
-                                break;
-                            case "Trending":
-                                header.setLoading(true);
-                                pullVideos(header, 11, 40, "-trending", null);
-                                break;
-                            case "Most Viewed":
-                                header.setLoading(true);
-                                pullVideos(header, 11, 40, "-views", null);
-                                break;
-                            case "Most Liked":
-                                header.setLoading(true);
-                                pullVideos(header, 11, 40, "-likes", null);
-                                break;
+                        ListRow listRow = (ListRow) getAdapter().get(header.getAdapterIndex());
+                        Log.e("WTH",listRow.getHeaderItem().getName()+" list row should be "+header.getName());
+                        ArrayObjectAdapter listRowAdapter = (ArrayObjectAdapter) listRow.getAdapter();
+                        Log.e("wth", String.valueOf(listRowAdapter.size()));
+                        for (Video toAdd:videoList){
+                            listRowAdapter.add(toAdd);
                         }
+
+
+
                     }
+
 
                 } else {
                     Log.e(TAG, "null response");
@@ -542,5 +543,28 @@ public class TvFragment extends BrowseFragment {
     public void setTitle(String title){
         setTitle(title);
     }
+    private void updateRows() {
+        if (forceRefresh){
+            loadRows();
+        }
+        ArrayObjectAdapter rowsAdapter = (ArrayObjectAdapter) this.getAdapter();
+        CardPresenter cardPresenter = new CardPresenter();
+
+        for ( LeanBackHeaderCategory head : ui){
+           ListRow listRow = (ListRow) getAdapter().get(head.getAdapterIndex());
+           ArrayObjectAdapter listRowAdapter = (ArrayObjectAdapter) listRow.getAdapter();
+            Log.e("WTF", head.getName()+" "+head.getVideos().size()+" "+head.getAdapterIndex()+"  "+listRow.getAdapter().size());
+            if (head.getVideos().size()>listRow.getAdapter().size()) {
+                for (Video item : head.getVideos()) {
+                    listRowAdapter.add(item);
+                }
+            }
+        }
+/*        if (selected>0){
+            this.setSelectedPosition((int) currentRowNumber, false, new ListRowPresenter.SelectItemViewHolderTask(selected));
+        }
+*/
+    }
+
 
 }
