@@ -37,6 +37,7 @@ Reproducible builds currently does not work.
 
 ## Help Translate
 * https://hosted.weblate.org/projects/peertube/
+* Video speed selection
 
 ## Features
 
