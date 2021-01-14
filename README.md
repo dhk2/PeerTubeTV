@@ -21,6 +21,7 @@ Please note this is app is in beta and is still missing a lot of features.
 
 ## Download
 * Beta Test on Google Play: https://play.google.com/store/apps/details?id=net.anticlimacticteleservices.peertube
+* install from Apk on Github: https://github.com/dhk2/PeerTubeTV/tree/develop/app/release
 
 
 ## Features
