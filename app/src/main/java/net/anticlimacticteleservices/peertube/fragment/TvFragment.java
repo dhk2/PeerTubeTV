@@ -1,5 +1,7 @@
 package net.anticlimacticteleservices.peertube.fragment;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -8,11 +10,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.text.InputType;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,8 +47,10 @@ import net.anticlimacticteleservices.peertube.activity.AccountActivity;
 import net.anticlimacticteleservices.peertube.activity.ServerAddressBookActivity;
 import net.anticlimacticteleservices.peertube.activity.SettingsActivity;
 import net.anticlimacticteleservices.peertube.activity.TvActivity;
+import net.anticlimacticteleservices.peertube.activity.VideoListActivity;
 import net.anticlimacticteleservices.peertube.activity.VideoPlayActivity;
 import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
+import net.anticlimacticteleservices.peertube.helper.ErrorHelper;
 import net.anticlimacticteleservices.peertube.model.LeanBackHeaderCategory;
 import net.anticlimacticteleservices.peertube.model.Video;
 import net.anticlimacticteleservices.peertube.model.VideoList;
@@ -119,7 +125,7 @@ public class TvFragment extends BrowseFragment {
         Log.i(TAG, "setting up ui elements");
         setupUIElements();
         Log.i(TAG, "loading rows");
-        loadRows();
+        //loadRows();
         Log.i(TAG, "setting listeners");
         setupEventListeners();
         Log.i(TAG, "done with create");
@@ -140,31 +146,37 @@ public class TvFragment extends BrowseFragment {
 
         head = new LeanBackHeaderCategory("Chronological");
         head.setLoading(true);
+        head.setAdapterIndex(ui.size());
         pullVideos(head,0,10,"-createdAt",null);
+
         ui.add(head);
 
         head = new LeanBackHeaderCategory("Local");
         head.setLoading(true);
+        head.setAdapterIndex(ui.size());
         pullVideos(head,0,10,"-createdAt","local");
         ui.add(head);
 
 
         head = new LeanBackHeaderCategory("Trending");
         head.setLoading(true);
+        head.setAdapterIndex(ui.size());
         pullVideos(head,0,10,"-trending",null);
         ui.add(head);
 
 
         head = new LeanBackHeaderCategory("Most Viewed");
         head.setLoading(true);
+        head.setAdapterIndex(ui.size());
         pullVideos(head,0,10,"-views",null);
         ui.add(head);
 
         head = new LeanBackHeaderCategory("Most Liked");
         head.setLoading(true);
+        head.setAdapterIndex(ui.size());
         pullVideos(head,0,10,"-likes",null);
         ui.add(head);
-
+        loadRows();
     }
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void loadRows() {
@@ -300,10 +312,33 @@ public class TvFragment extends BrowseFragment {
     private void setupEventListeners() {
         setOnSearchClickedListener(new View.OnClickListener() {
 
+            @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
             public void onClick(View view) {
-                Toast.makeText(getActivity(), "Implement your own in-app search", Toast.LENGTH_LONG)
-                        .show();
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                builder.setTitle("Search Videos");
+
+// Set up the input
+                final EditText input = new EditText(getContext());
+// Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+                input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
+                builder.setView(input);
+
+// Set up the buttons
+                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        searchVideos(input.getText().toString(),0,50,"-createdAt",null);
+                    }
+                });
+                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                builder.show();
             }
         });
 
@@ -517,14 +552,15 @@ public class TvFragment extends BrowseFragment {
                     if (videoList != null) {
                         Log.e("wth", header.getName()+" adding "+videoList.size()+" to "+header.getName()+" at index "+header.getAdapterIndex());
                         header.addAllVideo(videoList);
-                        ListRow listRow = (ListRow) getAdapter().get(header.getAdapterIndex());
-                        Log.e("WTH",listRow.getHeaderItem().getName()+" list row should be "+header.getName());
-                        ArrayObjectAdapter listRowAdapter = (ArrayObjectAdapter) listRow.getAdapter();
-                        Log.e("wth", String.valueOf(listRowAdapter.size()));
-                        for (Video toAdd:videoList){
-                            listRowAdapter.add(toAdd);
+                        if (getAdapter().size()>header.getAdapterIndex()) {
+                            ListRow listRow = (ListRow) getAdapter().get(header.getAdapterIndex());
+                            Log.e("WTH", listRow.getHeaderItem().getName() + " list row should be " + header.getName());
+                            ArrayObjectAdapter listRowAdapter = (ArrayObjectAdapter) listRow.getAdapter();
+                            Log.e("wth", String.valueOf(listRowAdapter.size()));
+                            for (Video toAdd : videoList) {
+                                listRowAdapter.add(toAdd);
+                            }
                         }
-
 
 
                     }
@@ -565,6 +601,53 @@ public class TvFragment extends BrowseFragment {
         }
 */
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void searchVideos(String searchQuery, int start, int count, String sort, String filter) {
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String nsfw = sharedPref.getBoolean(getString(R.string.pref_show_nsfw_key), false) ? "both" : "false";
+        Set<String> languages = sharedPref.getStringSet(getString(R.string.pref_video_language_key), null);
+        String apiBaseURL = APIUrlHelper.getUrlWithVersion(getContext());
+
+        GetVideoDataService service = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetVideoDataService.class);
+
+        Call<VideoList> call;
+        if (!searchQuery.equals("")) {
+            call = service.searchVideosData(start, count, sort, nsfw, searchQuery, filter, languages);
+        }else {
+            call = service.getVideosData(start, count, sort, nsfw, filter, languages);
+        }
+
+        /*Log the URL called*/
+        Log.d("URL Called", call.request().url() + "");
+//        Toast.makeText(VideoListActivity.this, "URL Called: " + call.request().url(), Toast.LENGTH_SHORT).show();
+
+        call.enqueue(new Callback<VideoList>() {
+            @Override
+            public void onResponse(@NonNull Call<VideoList> call, @NonNull Response<VideoList> response) {
+
+                if (response.body() != null) {
+                    ArrayList<Video> videoList = response.body().getVideoArrayList();
+                    if (videoList != null) {
+                        LeanBackHeaderCategory header=new LeanBackHeaderCategory("\uD83D\uDD0D"+searchQuery);
+
+                        Log.e("wth", header.getName()+" adding "+videoList.size()+" to "+header.getName()+" at index "+header.getAdapterIndex());
+                        header.addAllVideo(videoList);
+                        ui.add(0,header);
+                        loadRows();
+                        }
+                    }
+                }
+
+            @Override
+            public void onFailure(@NonNull Call<VideoList> call, @NonNull Throwable t) {
+                Log.wtf("err", t.fillInStackTrace());
+                ErrorHelper.showToastFromCommunicationError( getContext(), t );
+            }
+        });
+    }
+
 
 
 }

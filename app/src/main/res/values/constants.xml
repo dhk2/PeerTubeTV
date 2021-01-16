@@ -14,6 +14,8 @@
     <string name="pref_back_pause_key" translatable="false">pref_back_pause</string>
     <string name="pref_background_behavior_key" translatable="false">pref_background_behavior</string>
     <string name="pref_torrent_player_key" translatable="false">pref_torrent_player</string>
+    <string name="pref_webview_player_key" translatable="false">pref_webview_player</string>
+    <string name="pref_force_tv_key" translatable="false">pref_force_tv</string>
 
     <!-- defaults -->
     <string name="pref_default_api_base_url" formatted="false" translatable="false">https://troll.tv</string>

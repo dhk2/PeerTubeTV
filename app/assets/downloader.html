@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html><body>
 <h1>this is html</h1>
+<iframe width="560" height="315" sandbox="allow-same-origin allow-scripts allow-popups" src="https://based.directory/videos/embed/e8839450-3b62-4dcd-8c9a-e35ee08bdedb?api=1" frameborder="0" allowfullscreen></iframe>
 
+<script src="https://unpkg.com/@peertube/embed-api/build/player.min.js"></script>
+
+<script>
+  const PeerTubePlayer = window['PeerTubePlayer']
+
+let player = new PeerTubePlayer(document.querySelector('iframe'))
+
+</script>
 </body>
 </html>

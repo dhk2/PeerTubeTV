@@ -62,6 +62,7 @@ public class WebviewFragment extends Fragment {
     private static WebView webView;
     private static Video video;
     private static long smashes;
+    private Boolean playing;
     Boolean fuckThis=true;
     public static Button getMoreButton() { return moreButton; }
 
@@ -135,15 +136,12 @@ public class WebviewFragment extends Fragment {
                         switch (menuItem.getItemId()) {
                             case R.id.halfspeed:
                                 webView.loadUrl("javascript:videojsPlayer.playbackRate(.5)");
-                                webView.loadUrl("javascript:videojsPlayer.play()");
                                 return true;
                             case R.id.normalspeed:
                                 webView.loadUrl("javascript:videojsPlayer.playbackRate(1)");
-                                webView.loadUrl("javascript:videojsPlayer.play()");
                                 return true;
                             case R.id.doublespeed:
                                 webView.loadUrl("javascript:videojsPlayer.playbackRate(2)");
-                                webView.loadUrl("javascript:videojsPlayer.play()");
                                 return true;
                             case R.id.dumb:
                                 /*
@@ -208,36 +206,23 @@ public class WebviewFragment extends Fragment {
                         if (progress == 100) {
                             Log.e("WTF", "progress " + progress);
                             webView.requestFocus();
-                            fuckThis=true;
-                            playVideo();
+                            bruteForcePlay();
                         }
                     }
                 });
-
+                playing=false;
                 webView.loadUrl("https://" + playerURL);
                  //webView.loadUrl("file:///android_asset/downloader.html");
-
-
-
-
-
                 webView.addJavascriptInterface(new JavascriptWebviewInterface(getContext()), "Android");
 
             }
-
             @Override
             public void onFailure(@NonNull Call<Video> call, @NonNull Throwable t) {
                 Log.wtf(TAG, t.fillInStackTrace());
                 ErrorHelper.showToastFromCommunicationError( getActivity(), t );
             }
         });
-
-
-
-
-
     }
-
     public static String getVideoUuid() {
         return mVideoUuid;
     }
@@ -246,20 +231,57 @@ public class WebviewFragment extends Fragment {
         return new Seed(video,webView);
     }
     // none of the listeners for ready or done work, brute force FTW
-    public void playVideo(){
+    public void bruteForcePlay(){
         webView.evaluateJavascript("javascript:videojsPlayer.play() ", new ValueCallback<String>() {
             @Override
             public void onReceiveValue(String s) {
                 //kludge because null, empty, and direct comparison all failed, but null returns as 4 long and empty returns as 2 long
                 if (s.length()>2) {
                     smashes++;
-                    playVideo();
+                    if (smashes==5000){
+                        Log.e("wtf","play commnand not working, returning "+s);
+                    }
+                    bruteForcePlay();
                 }
                 else{
                     Log.d("WTF", "exiting smash loop after "+smashes +" smashes because finally got <" + s+">"+s.length());
+                    smashes=0;
+                    playing=true;
                 }
 
             }
+        });
+    }
+    public void play(){
+        webView.evaluateJavascript("javascript:videojsPlayer.play() ", new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String s) {
+                Log.e("wtf","play: "+s);
+                playing=true;
+            }
+        });
+    }
+    public String getHTML(String link){
+        String s1="<iframe autoplay height=\"100%\" width=\"100%\" frameborder=\"0\" sandbox=\"allow-same-origin allow-scripts allow-popups\" src=\"";
+        String s2="?api=1\" frameborder=\"0\" allowfullscreen></iframe>\n" +
+                "\n" +
+                "<script src=\"https://unpkg.com/@peertube/embed-api/build/player.min.js\"></script>\n" +
+                "\n" +
+                "<script>\n" +
+                "  const PeerTubePlayer = window['PeerTubePlayer']\n" +
+                "\n" +
+                "let player = new PeerTubePlayer(document.querySelector('iframe'))\n" +
+                "\n" +
+                "</script>";
+        return (s1+link+s2);
+
+    }
+    public void pauseVideo(){
+        webView.evaluateJavascript("javascript:videojsPlayer.pause() ", new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String s) {
+                    Log.d("WTF", "pausing video <" + s+">"+s.length());
+                }
         });
     }
 }

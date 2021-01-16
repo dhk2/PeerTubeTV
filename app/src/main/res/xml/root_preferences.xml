@@ -53,7 +53,7 @@
     <PreferenceCategory app:title="@string/settings_activity_video_playback_category_title" app:iconSpaceReserved="false">
 
         <SwitchPreference
-            app:defaultValue="true"
+            app:defaultValue="false"
             app:key="@string/pref_back_pause_key"
             app:summary="@string/pref_description_back_pause"
             app:title="@string/pref_title_back_pause"
@@ -68,12 +68,26 @@
             app:title="@string/pref_background_behavior"
             app:iconSpaceReserved="false"/>
 
+t        <SwitchPreference
+            app:defaultValue="true"
+            app:key="@string/pref_webview_player_key"
+            app:summary="@string/pref_description_webview_player"
+            app:title="@string/pref_title_webview_player"
+            app:iconSpaceReserved="false"/>
+
         <SwitchPreference
             app:defaultValue="false"
             app:key="@string/pref_torrent_player_key"
             app:summary="@string/pref_description_torrent_player"
             app:title="@string/pref_title_torrent_player"
             app:iconSpaceReserved="false"/>
+
+        <SwitchPreference
+        app:defaultValue="true"
+        app:key="@string/pref_force_tv_key"
+        app:summary="@string/pref_description_force_tv"
+        app:title="@string/pref_title_force_tv"
+        app:iconSpaceReserved="false"/>
 
     </PreferenceCategory>
 

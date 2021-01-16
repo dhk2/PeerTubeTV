@@ -81,6 +81,11 @@
     <string name="pref_description_app_theme">Restart app for theme to take effect.</string>
     <string name="pref_title_torrent_player">Torrent Video Player</string>
     <string name="pref_description_torrent_player">Video playback via a torrent stream. This requires Storage Permissions. (Alpha, not stable!)</string>
+    <string name="pref_title_webview_player">Webview Video Player</string>
+    <string name="pref_description_webview_player">Video playback via a webview. This supports p2p in videos and livestreams. (Alpha, not stable!)</string>
+
+    <string name="pref_title_force_tv">Use TV Interface</string>
+    <string name="pref_description_force_tv">Use the TV interface on devices that are not automatically detected as a TV</string>
     <string name="pref_title_license">License</string>
     <string name="pref_description_license">\n<b>GNU Affero General Public License v3.0</b>\n\nPermissions of this strongest copyleft license are conditioned on making available complete source code of licensed works and modifications, which include larger works using a licensed work, under the same license. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights. When a modified version is used to provide a service over a network, the complete source code of the modified version must be made available.</string>
     <string name="pref_title_version">Version</string>

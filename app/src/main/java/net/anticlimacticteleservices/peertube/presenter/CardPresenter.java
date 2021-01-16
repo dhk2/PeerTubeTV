@@ -98,10 +98,9 @@ public class CardPresenter extends Presenter {
         Video movie = (Video) item;
         ImageCardView cardView = (ImageCardView) viewHolder.view;
 
-        Log.d(TAG, "onBindViewHolder");
+        Log.i(TAG, "onBindViewHolder");
         if (movie.getName() != null) {
             long millisLeft=movie.getDuration()*1000l;
-            Log.e("WTF", String.valueOf(millisLeft));
             String hour =  String.format("%02d", millisLeft/(3600l*1000l));
             String minute = String.format("%02d",millisLeft/(60l*1000l) % 60l);
             String second = String.format("%02d",millisLeft/1000l % 60l);
@@ -121,7 +120,6 @@ public class CardPresenter extends Presenter {
                 dateString=dateString+minute+":";
             }
             dateString=dateString+second;
-            Log.e("WTF", dateString);
             if (movie.getViews()>0) {
                 iconString= " \uD83D\uDC41" + movie.getViews();
             }

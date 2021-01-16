@@ -72,6 +72,7 @@ import androidx.fragment.app.FragmentTransaction;
 import static com.google.android.exoplayer2.ui.PlayerNotificationManager.ACTION_PAUSE;
 import static com.google.android.exoplayer2.ui.PlayerNotificationManager.ACTION_PLAY;
 import static com.google.android.exoplayer2.ui.PlayerNotificationManager.ACTION_STOP;
+import static net.anticlimacticteleservices.peertube.application.AppApplication.getContext;
 import static net.anticlimacticteleservices.peertube.helper.VideoHelper.canEnterPipMode;
 
 public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.OnMenuItemClickListener {
@@ -204,18 +205,21 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
                 "style",
                 getPackageName())
         );
-        if (test){
+
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             setContentView(R.layout.activity_video_play_webview);
+            Log.e("WTF","using full screen webview");
         }
         else {
             setContentView(R.layout.activity_video_play);
+            Log.e("WTF","using normal activiy view ");
         }
         // get video ID
         Intent intent = getIntent();
         String videoUuid = intent.getStringExtra(VideoListActivity.EXTRA_VIDEOID);
         VideoPlayerFragment videoPlayerFragment=null;
         WebviewFragment webviewFragment=null;
-        if (test){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             webviewFragment = (WebviewFragment) getSupportFragmentManager().findFragmentById(R.id.webview_fragment);
             assert webviewFragment !=null;
         }
@@ -225,13 +229,13 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         }
         String playingVideo;
         Log.v(TAG,"attempting to play "+videoUuid);
-        if (test) {
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             playingVideo = WebviewFragment.getVideoUuid();
         } else {
             playingVideo = videoPlayerFragment.getVideoUuid();
         }
         Log.v(TAG, "oncreate click: " + videoUuid + " is trying to replace: " + playingVideo);
-        if (test){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             webviewFragment.start(videoUuid);
         }
         else {
@@ -262,7 +266,8 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         String playingVideo="";
         String videoUuid="";
         videoUuid = intent.getStringExtra(VideoListActivity.EXTRA_VIDEOID);
-        if (test) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             webviewFragment = (WebviewFragment) getSupportFragmentManager().findFragmentById(R.id.webview_fragment);
             assert webviewFragment != null;
             playingVideo = webviewFragment.getVideoUuid();
@@ -275,7 +280,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         Log.v(TAG, "new intent click: " + videoUuid + " is trying to replace: " + playingVideo);
 
 
-        if (test){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
                 webviewFragment.start(videoUuid);
         }
         else {
@@ -350,7 +355,8 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
 
     @Override
     protected void onDestroy() {
-        if (test){
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             Log.v(TAG,"destroy webview here");
         }
         else {
@@ -379,7 +385,8 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
     @Override
     protected void onStop() {
         super.onStop();
-        if (test){
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             Log.v(TAG,"should stop webview");
 
             AppApplication.addSeed(webviewFragment.getSeed());
@@ -413,7 +420,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         FragmentManager fragmentManager = getSupportFragmentManager();
         WebviewFragment webviewFragment = null;
         VideoPlayerFragment videoPlayerFragment =null;
-        if (test){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             webviewFragment = (WebviewFragment) fragmentManager.findFragmentById(R.id.webview_fragment);
         }
         else {
@@ -426,12 +433,12 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
             super.onUserLeaveHint();
             return;
         }
-        if (test){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             super.onBackPressed();
         }
         if (backgroundBehavior.equals(getString(R.string.pref_background_stop_key))) {
             Log.v(TAG, "stop the video");
-            if (test){
+            if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
                 webviewFragment.getWebView().loadUrl("javascript:videojsPlayer.pause()");
             }
             else {
@@ -471,7 +478,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         Log.v(TAG, "onBackPressed()...");
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         String backgroundBehavior = sharedPref.getString(getString(R.string.pref_background_behavior_key), getString(R.string.pref_background_stop_key));
-        if (test){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             if (backgroundBehavior.equals(getString(R.string.pref_background_stop_key))) {
                 Log.v(TAG, "stop the video");
                 super.onBackPressed();

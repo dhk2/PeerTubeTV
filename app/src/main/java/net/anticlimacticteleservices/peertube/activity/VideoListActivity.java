@@ -106,7 +106,27 @@ public class VideoListActivity extends CommonActivity {
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean forceTV = sharedPref.getBoolean(getString(R.string.pref_force_tv_key), false);
 
+        UiModeManager uiMode = (UiModeManager) getSystemService(UI_MODE_SERVICE);
+        if(uiMode.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+            Log.e("wtf", "tv verified");
+            Intent intentSettings = new Intent(this, TvActivity.class);
+            this.startActivity(intentSettings);
+            this.releaseInstance();
+        }
+        else if (forceTV) {
+            Log.e("wtf", "tv forced");
+            Intent intentSettings = new Intent(this, TvActivity.class);
+            this.startActivity(intentSettings);
+            this.releaseInstance();
+        }
+        else {
+            Log.e("wtf", "not on tv");
+            //then start phone
+
+        }
         setContentView(R.layout.activity_video_list);
 
         filter = null;
