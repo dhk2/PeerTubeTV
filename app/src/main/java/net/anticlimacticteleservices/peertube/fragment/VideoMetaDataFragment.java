@@ -75,6 +75,7 @@ public class VideoMetaDataFragment extends Fragment {
 
     private boolean leaveAppExpected = false;
 
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {

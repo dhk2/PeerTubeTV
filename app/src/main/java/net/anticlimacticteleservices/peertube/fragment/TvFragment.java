@@ -1,6 +1,8 @@
 package net.anticlimacticteleservices.peertube.fragment;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -23,35 +26,46 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.leanback.app.BackgroundManager;
 import androidx.leanback.app.BrowseFragment;
 import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.HeaderItem;
 import androidx.leanback.widget.ListRow;
 import androidx.leanback.widget.ListRowPresenter;
-import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.OnItemViewClickedListener;
 import androidx.leanback.widget.OnItemViewSelectedListener;
 import androidx.leanback.widget.Presenter;
 import androidx.leanback.widget.Row;
 import androidx.leanback.widget.RowPresenter;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelStore;
+import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import net.anticlimacticteleservices.peertube.R;
 import net.anticlimacticteleservices.peertube.activity.AccountActivity;
 import net.anticlimacticteleservices.peertube.activity.ServerAddressBookActivity;
 import net.anticlimacticteleservices.peertube.activity.SettingsActivity;
 import net.anticlimacticteleservices.peertube.activity.TvActivity;
-import net.anticlimacticteleservices.peertube.activity.VideoListActivity;
 import net.anticlimacticteleservices.peertube.activity.VideoPlayActivity;
+import net.anticlimacticteleservices.peertube.database.Server;
+import net.anticlimacticteleservices.peertube.database.ServerDao;
+import net.anticlimacticteleservices.peertube.database.ServerRoomDatabase;
+import net.anticlimacticteleservices.peertube.database.ServerViewModel;
 import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
 import net.anticlimacticteleservices.peertube.helper.ErrorHelper;
 import net.anticlimacticteleservices.peertube.model.LeanBackHeaderCategory;
+import net.anticlimacticteleservices.peertube.model.ServerList;
 import net.anticlimacticteleservices.peertube.model.Video;
 import net.anticlimacticteleservices.peertube.model.VideoList;
 import net.anticlimacticteleservices.peertube.network.GetUserService;
@@ -59,9 +73,9 @@ import net.anticlimacticteleservices.peertube.network.GetVideoDataService;
 import net.anticlimacticteleservices.peertube.network.RetrofitInstance;
 import net.anticlimacticteleservices.peertube.network.Session;
 import net.anticlimacticteleservices.peertube.presenter.CardPresenter;
+import net.anticlimacticteleservices.peertube.service.LoginService;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -89,14 +103,7 @@ public class TvFragment extends BrowseFragment {
     private Timer mBackgroundTimer;
     private String mBackgroundUri;
     private BackgroundManager mBackgroundManager;
-    private List<Video> list;
-    private List<Video> localVideos;
-    private List<Video> TrendingVideos;
-    private List<Video> likedVideos;
-    private List<Video> recentVideos;
-    private List<Video> subscriptionVideos;
-    private List<Video> myVideos;
-    private List<Video> History;
+
     private int currentStart = 0;
     private int count = 12;
     private String sort = "-createdAt";
@@ -104,14 +111,18 @@ public class TvFragment extends BrowseFragment {
     private String searchQuery = "";
     private Boolean subscriptions = false;
     private ArrayList<LeanBackHeaderCategory> ui;
-    private TextView emptyView;
-    private RecyclerView recyclerView;
+    private List<net.anticlimacticteleservices.peertube.database.Server> allServers;
     private String currentRow;
     private Video currentVideo;
     private long currentRowNumber;
     private LeanBackHeaderCategory head;
     private int isLoading = 0;
-    public  boolean forceRefresh;
+    private  boolean drawWhenLoaded=true;
+
+    private ServerViewModel mServerViewModel;
+    private AddServerFragment addServerFragment;
+    private FloatingActionButton floatingActionButton;
+    private FragmentManager fragmentManager;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
@@ -120,6 +131,8 @@ public class TvFragment extends BrowseFragment {
         super.onActivityCreated(savedInstanceState);
         Log.i(TAG, "getting videos");
         initVideos();
+        Log.i(TAG, "getting servers");
+        initServers();
         Log.i(TAG, "preparing background manager");
         prepareBackgroundManager();
         Log.i(TAG, "setting up ui elements");
@@ -139,11 +152,22 @@ public class TvFragment extends BrowseFragment {
             mBackgroundTimer.cancel();
         }
     }
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void initServers(){
 
+        ServerRoomDatabase db = ServerRoomDatabase.getDatabase(getContext());
+        ServerDao mServerDao = db.serverDao();
+         allServers = mServerDao.getDeadServers();
+        for (net.anticlimacticteleservices.peertube.database.Server test:allServers){
+            Log.e("wtf",test.getServerName());
+        }
+    }
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void initVideos() {
         ui=new ArrayList<LeanBackHeaderCategory>();
-
+        currentRow=null;
+        currentVideo=null;
+        currentRowNumber=0;
         head = new LeanBackHeaderCategory("Chronological");
         head.setLoading(true);
         head.setAdapterIndex(ui.size());
@@ -186,15 +210,9 @@ public class TvFragment extends BrowseFragment {
 
         for ( LeanBackHeaderCategory head : ui){
             ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(cardPresenter);
-            Log.e("WTF", head.getName()+" "+head.getVideos().size());
             if (head.getVideos().size()>0) {
                 for (Video item : head.getVideos()) {
                     listRowAdapter.add(item);
-                    if ((null != currentVideo) && (currentVideo.equals((Video)item))){
-                        if (selected<0 && currentRow.equals(head.getName())){
-                            selected = (listRowAdapter.size() - 1);
-                        }
-                    }
                 }
                 HeaderItem headerItem = new HeaderItem(head.getName());
                 ListRow toAdd = new ListRow(headerItem, listRowAdapter);
@@ -215,10 +233,17 @@ public class TvFragment extends BrowseFragment {
         gridRowAdapter.add("Refresh");
         rowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
 
-        setAdapter(rowsAdapter);
-        if (selected>0){
-            this.setSelectedPosition((int) currentRowNumber, false, new ListRowPresenter.SelectItemViewHolderTask(selected));
+        gridHeader = new HeaderItem("Servers");
+        mGridPresenter = new GridItemPresenter();
+        gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);
+        if (null != allServers){
+            for (Server knownServer:allServers){
+                gridRowAdapter.add(knownServer);
+            }
         }
+        gridRowAdapter.add("Add Server");
+        rowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
+        setAdapter(rowsAdapter);
         if (Session.getInstance().isLoggedIn() && !subscriptions) {
 
             subscriptions=true;
@@ -386,7 +411,36 @@ public class TvFragment extends BrowseFragment {
                 intent.putExtra(EXTRA_VIDEOID, movie.getUuid());
                 getContext().startActivity(intent);
 
-             } else if (item instanceof String) {
+            } else if (item instanceof Server){
+                Server server = (Server)item;
+                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+                SharedPreferences.Editor editor = sharedPref.edit();
+                String serverUrl = APIUrlHelper.cleanServerUrl(server.getServerHost());
+                editor.putString(getContext().getString(R.string.pref_api_base_key), serverUrl);
+                editor.apply();
+
+                // Logout if logged in
+                Session session = Session.getInstance();
+                if (session.isLoggedIn()) {
+                    session.invalidate();
+                }
+
+                // attempt authentication if we have a username
+                if (!TextUtils.isEmpty(server.getUsername())) {
+                    LoginService.Authenticate(
+                            server.getUsername(),
+                            server.getPassword()
+                    );
+                }
+                //redraw interface with new server info
+                ui=new ArrayList<LeanBackHeaderCategory>();
+                subscriptions=false;
+                Toast.makeText(getContext(), getContext().getString(R.string.server_selection_set_server, serverUrl), Toast.LENGTH_LONG).show();
+                getActivity().getFragmentManager().popBackStack();
+                initVideos();
+                drawWhenLoaded=true;
+
+            } else if (item instanceof String) {
                 Toast.makeText(getActivity(), ((String) item), Toast.LENGTH_SHORT).show();
                 if (item.equals("Settings")){
                     Intent settingsActivityIntent = new Intent(getActivity(), SettingsActivity.class);
@@ -410,6 +464,12 @@ public class TvFragment extends BrowseFragment {
 
                     initVideos();
                 }
+                if (item.equals("Add Server")){
+
+                    Intent addressBookActivityIntent = new Intent(getActivity(), ServerAddressBookActivity.class);
+                    startActivityForResult(addressBookActivityIntent, SWITCH_INSTANCE);
+                }
+
             }
         }
     }
@@ -423,8 +483,8 @@ public class TvFragment extends BrowseFragment {
                 RowPresenter.ViewHolder rowViewHolder,
                 Row row) {
             if (item instanceof Video) {
-                currentRow= row.getHeaderItem().getName();
-                currentVideo = ((Video) item);
+                //currentRow= row.getHeaderItem().getName();
+                //currentVideo = ((Video) item);
                 for (LeanBackHeaderCategory lbh:ui){
                     if (lbh.getName().equals(currentRow)){
                         currentRowNumber=ui.indexOf(lbh);
@@ -515,7 +575,10 @@ public class TvFragment extends BrowseFragment {
         public void onBindViewHolder(ViewHolder viewHolder, Object item) {
             if (item instanceof Video) {
                 ((TextView) viewHolder.view).setText(((Video) item).getName());
-            } else {
+            } else if (item instanceof Server){
+                ((TextView) viewHolder.view).setText(((Server) item).getServerName());
+            }
+            else {
                 ((TextView) viewHolder.view).setText((String) item);
             }
         }
@@ -561,8 +624,18 @@ public class TvFragment extends BrowseFragment {
                                 listRowAdapter.add(toAdd);
                             }
                         }
-
-
+                        if (drawWhenLoaded) {
+                            boolean allLoaded=true;
+                            for (LeanBackHeaderCategory head : ui) {
+                                if (head.isLoading()){
+                                    allLoaded=false;
+                                }
+                            }
+                            if (allLoaded){
+                                drawWhenLoaded=false;
+                                loadRows();
+                            }
+                        }
                     }
 
 
@@ -573,14 +646,16 @@ public class TvFragment extends BrowseFragment {
             @Override
             public void onFailure(@NonNull Call<VideoList> call, @NonNull Throwable t) {
                 Log.wtf("err", t.fillInStackTrace());
+                ErrorHelper.showToastFromCommunicationError( getContext(), t );
             }
         });
     }
     public void setTitle(String title){
         setTitle(title);
     }
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void updateRows() {
-        if (forceRefresh){
+        if (drawWhenLoaded){
             loadRows();
         }
         ArrayObjectAdapter rowsAdapter = (ArrayObjectAdapter) this.getAdapter();

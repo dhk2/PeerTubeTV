@@ -87,11 +87,13 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
     boolean playing =false;
     boolean menu=false;
     String speed="1";
+    VideoPlayerFragment videoPlayerFragment;
+    VideoMetaDataFragment videoMetaDataFragment;
     //This can only be called when in entering pip mode which can't happen if the device doesn't support pip mode.
     @SuppressLint("NewApi")
     public void makePipControls() {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
+        videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
 
         ArrayList<RemoteAction> actions = new ArrayList<>();
 
@@ -134,7 +136,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
 
     public void changedToPipMode() {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
+        videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
 
         assert videoPlayerFragment != null;
         videoPlayerFragment.showControls(false);
@@ -180,7 +182,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
 
     public void changedToNormalMode() {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
+        videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
 
         assert videoPlayerFragment != null;
         videoPlayerFragment.showControls(true);
@@ -217,7 +219,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         // get video ID
         Intent intent = getIntent();
         String videoUuid = intent.getStringExtra(VideoListActivity.EXTRA_VIDEOID);
-        VideoPlayerFragment videoPlayerFragment=null;
+        videoPlayerFragment=null;
         WebviewFragment webviewFragment=null;
         if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             webviewFragment = (WebviewFragment) getSupportFragmentManager().findFragmentById(R.id.webview_fragment);
@@ -261,7 +263,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-        VideoPlayerFragment videoPlayerFragment = null;
+        videoPlayerFragment = null;
         webviewFragment =null;
         String playingVideo="";
         String videoUuid="";
@@ -318,39 +320,42 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
     }
 
     private void setOrientation(Boolean isLandscape) {
-        if (!test) {
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
-            VideoMetaDataFragment videoMetaFragment = (VideoMetaDataFragment) fragmentManager.findFragmentById(R.id.video_meta_data_fragment);
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        RelativeLayout.LayoutParams params;
 
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+            webviewFragment = (WebviewFragment) fragmentManager.findFragmentById(R.id.webview_fragment);
+            assert webviewFragment !=null;
+            params = (RelativeLayout.LayoutParams) webviewFragment.requireView().getLayoutParams();
+        } else {
+            videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
             assert videoPlayerFragment != null;
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) videoPlayerFragment.requireView().getLayoutParams();
-            params.width = FrameLayout.LayoutParams.MATCH_PARENT;
-            params.height = isLandscape ? FrameLayout.LayoutParams.MATCH_PARENT : (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 250, getResources().getDisplayMetrics());
+            params = (RelativeLayout.LayoutParams) videoPlayerFragment.requireView().getLayoutParams();
 
+        }
+        params.width = FrameLayout.LayoutParams.MATCH_PARENT;
+        params.height = isLandscape ? FrameLayout.LayoutParams.MATCH_PARENT : (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 250, getResources().getDisplayMetrics());
+
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+            webviewFragment.requireView().setLayoutParams(params);
+        } else {
             videoPlayerFragment.requireView().setLayoutParams(params);
+        }
 
-            if (videoMetaFragment != null) {
-                FragmentTransaction transaction = fragmentManager.beginTransaction()
-                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
-
-                if (isLandscape) {
-                    transaction.hide(videoMetaFragment);
-                } else {
-                    transaction.show(videoMetaFragment);
-                }
-
-                transaction.commit();
-            }
-
-            videoPlayerFragment.setIsFullscreen(isLandscape);
+        if (videoMetaDataFragment != null) {
+            FragmentTransaction transaction = fragmentManager.beginTransaction()
+                    .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
 
             if (isLandscape) {
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                transaction.hide(videoMetaDataFragment);
             } else {
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                transaction.show(videoMetaDataFragment);
             }
+
+            transaction.commit();
         }
+
     }
 
     @Override
@@ -360,7 +365,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
             Log.v(TAG,"destroy webview here");
         }
         else {
-            VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment)
+            videoPlayerFragment = (VideoPlayerFragment)
                     getSupportFragmentManager().findFragmentById(R.id.video_player_fragment);
 
             assert videoPlayerFragment != null;
@@ -392,7 +397,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
             AppApplication.addSeed(webviewFragment.getSeed());
         }
         else {
-            VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment)
+            videoPlayerFragment = (VideoPlayerFragment)
                     getSupportFragmentManager().findFragmentById(R.id.video_player_fragment);
 
             assert videoPlayerFragment != null;
@@ -419,15 +424,16 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         assert backgroundBehavior != null;
         FragmentManager fragmentManager = getSupportFragmentManager();
         WebviewFragment webviewFragment = null;
-        VideoPlayerFragment videoPlayerFragment =null;
+        videoPlayerFragment =null;
         if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             webviewFragment = (WebviewFragment) fragmentManager.findFragmentById(R.id.webview_fragment);
+            assert webviewFragment != null;
         }
         else {
             videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
             assert videoPlayerFragment != null;
         }
-        VideoMetaDataFragment videoMetaDataFragment = (VideoMetaDataFragment) fragmentManager.findFragmentById(R.id.video_meta_data_fragment);
+        videoMetaDataFragment = (VideoMetaDataFragment) fragmentManager.findFragmentById(R.id.video_meta_data_fragment);
         if ( videoMetaDataFragment.isLeaveAppExpected() )
         {
             super.onUserLeaveHint();
@@ -439,7 +445,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         if (backgroundBehavior.equals(getString(R.string.pref_background_stop_key))) {
             Log.v(TAG, "stop the video");
             if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
-                webviewFragment.getWebView().loadUrl("javascript:videojsPlayer.pause()");
+                webviewFragment.pauseVideo();
             }
             else {
                 videoPlayerFragment.pauseVideo();
@@ -476,19 +482,21 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
     public void onBackPressed() {
 
         Log.v(TAG, "onBackPressed()...");
+
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         String backgroundBehavior = sharedPref.getString(getString(R.string.pref_background_behavior_key), getString(R.string.pref_background_stop_key));
         if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             if (backgroundBehavior.equals(getString(R.string.pref_background_stop_key))) {
-                Log.v(TAG, "stop the video");
+                Log.v(TAG, "stop the video based on setting");
                 super.onBackPressed();
             }
             else {
-                this.enterPictureInPictureMode();
+                Log.v(TAG, "stop the video despite the setting");
+                super.onBackPressed();
             }
         }
         else {
-            VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment)
+            videoPlayerFragment = (VideoPlayerFragment)
                     getSupportFragmentManager().findFragmentById(R.id.video_player_fragment);
 
             assert videoPlayerFragment != null;
@@ -543,7 +551,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
     @RequiresApi(api = Build.VERSION_CODES.O)
     public void enterPipMode() {
         final FragmentManager fragmentManager = getSupportFragmentManager();
-        final VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById( R.id.video_player_fragment );
+        videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById( R.id.video_player_fragment );
 
         if ( videoPlayerFragment.getVideoAspectRatio() == 0 ) {
             Log.i( TAG, "impossible to switch to pip" );
@@ -562,7 +570,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode, Configuration newConfig) {
         FragmentManager fragmentManager = getSupportFragmentManager();
-        VideoPlayerFragment videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
+        videoPlayerFragment = (VideoPlayerFragment) fragmentManager.findFragmentById(R.id.video_player_fragment);
 
         if (videoPlayerFragment != null) {
 
@@ -586,6 +594,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
             return super.dispatchKeyEvent(event);
         }
         View current = getCurrentFocus();
+        Log.i("WTF", String.valueOf(current));
         if (current != null){
             current.clearFocus();
             webviewFragment.getWebView().requestFocus();
@@ -603,11 +612,11 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
                 return true;
             }
             if (!playing){
-                webviewFragment.getWebView().loadUrl("javascript:videojsPlayer.play()");
+                webviewFragment.play();
                 playing=true;
                 Log.i("WTF", "playing video");
             } else {
-                webviewFragment.getWebView().loadUrl("javascript:videojsPlayer.pause()");
+                webviewFragment.pauseVideo();
                 playing = false;
                 Log.i("WTF", "pausing video");
             }
@@ -615,9 +624,22 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         //menu
         if ((act == KeyEvent.ACTION_DOWN && code ==82) || (code==23 && event.isLongPress()))  {
             Log.e("WTF","need to bring up menu");
-            webviewFragment.getWebView().loadUrl("javascript:videojsPlayer.pause()");
-            playing = false;
-            webviewFragment.getMoreButton().callOnClick();
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            videoMetaDataFragment = (VideoMetaDataFragment) fragmentManager.findFragmentById(R.id.video_meta_data_fragment);
+            if (videoMetaDataFragment != null) {
+                fragmentManager = getSupportFragmentManager();
+                FragmentTransaction transaction = fragmentManager.beginTransaction()
+                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
+                if (!videoMetaDataFragment.isVisible()) {
+                    transaction.show(videoMetaDataFragment);
+                    Log.e("WTF","showing meta");
+                } else {
+                    transaction.hide(videoMetaDataFragment);
+                    Log.e("WTF","hiding meta");
+                }
+                transaction.commit();
+            }
+
             menu=true;
             return true;
         }

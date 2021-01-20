@@ -17,6 +17,10 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:hint="@string/server_book_add_label"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:focusedByDefault="true"
+        android:nextFocusDown="@id/serverUrl"
         android:inputType="textPersonName" />
 
     <RelativeLayout
