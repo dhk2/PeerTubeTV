@@ -134,6 +134,18 @@ public class AddServerFragment extends Fragment {
             Intent intentServer = new Intent(getActivity(), SearchServerActivity.class);
             this.startActivityForResult(intentServer, PICK_SERVER);
         });
+        if (null != TvFragment.getEditServer()){
+            EditText serverUrl = mView.findViewById(R.id.serverUrl);
+            serverUrl.setText(TvFragment.getEditServer().getServerHost());
+            EditText serverLabel = mView.findViewById(R.id.serverLabel);
+            serverLabel.setText(TvFragment.getEditServer().getServerName());
+            EditText serverUsername = mView.findViewById(R.id.serverUsername);
+            serverUsername.setText(TvFragment.getEditServer().getUsername());
+            EditText serverPassword = mView.findViewById(R.id.serverPassword);
+            serverPassword.setText(TvFragment.getEditServer().getPassword());
+            addServerButton.setText("Save");
+        }
+
 
         return mView;
     }

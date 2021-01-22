@@ -394,7 +394,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
             Log.v(TAG,"should stop webview");
 
-            AppApplication.addSeed(webviewFragment.getSeed());
+          //  AppApplication.addSeed(webviewFragment.getSeed());
         }
         else {
             videoPlayerFragment = (VideoPlayerFragment)
