@@ -37,9 +37,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.google.android.material.tooltip.TooltipDrawable;
+
 import net.anticlimacticteleservices.peertube.R;
 import net.anticlimacticteleservices.peertube.activity.SearchServerActivity;
 import net.anticlimacticteleservices.peertube.activity.ServerAddressBookActivity;
+import net.anticlimacticteleservices.peertube.database.Server;
 import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
 
 import java.util.Objects;
@@ -53,7 +56,7 @@ public class AddServerFragment extends Fragment {
     public static final Integer PICK_SERVER = 1;
 
     private OnFragmentInteractionListener mListener;
-
+    private Server oldServer=null;
     private View mView;
 
     public AddServerFragment() {
@@ -99,23 +102,34 @@ public class AddServerFragment extends Fragment {
                 selectedLabel.setError( act.getString(R.string.server_book_label_is_required ));
                 Toast.makeText(act, R.string.invalid_url, Toast.LENGTH_LONG).show();
                 formValid = false;
+            } else {
+                oldServer.setServerName(selectedLabel.getText().toString());
             }
 
             // validate url
             EditText selectedUrl = mView.findViewById(R.id.serverUrl);
             String serverUrl = APIUrlHelper.cleanServerUrl(selectedUrl.getText().toString());
             selectedUrl.setText(serverUrl);
+            oldServer.setServerHost(serverUrl);
 
             if (!Patterns.WEB_URL.matcher(serverUrl).matches()) {
                 selectedUrl.setError( act.getString(R.string.server_book_valid_url_is_required ) );
                 Toast.makeText(act, R.string.invalid_url, Toast.LENGTH_LONG).show();
                 formValid = false;
             }
+            EditText selectedUserName =mView.findViewById(R.id.serverUsername);
+            oldServer.setUsername(String.valueOf(selectedUserName.getText()));
 
+            EditText selectedUserPassword =mView.findViewById(R.id.serverPassword);
+            oldServer.setPassword(String.valueOf(selectedUserPassword.getText()));
+            Log.e("wtf",oldServer.toString());
             if (formValid) {
                 if (act instanceof ServerAddressBookActivity) {
-                    ((ServerAddressBookActivity) act).addServer(mView);
-
+                    if (oldServer !=null) {
+                        ((ServerAddressBookActivity) act).addServer(oldServer);
+                    } else {
+                        ((ServerAddressBookActivity) act).addServer(mView);
+                    }
                 }
             }
 
@@ -134,15 +148,18 @@ public class AddServerFragment extends Fragment {
             Intent intentServer = new Intent(getActivity(), SearchServerActivity.class);
             this.startActivityForResult(intentServer, PICK_SERVER);
         });
-        if (null != TvFragment.getEditServer()){
+        oldServer=TvFragment.getEditServer();
+        if (null != oldServer){
+            Log.e("wtf",oldServer.toString());
             EditText serverUrl = mView.findViewById(R.id.serverUrl);
-            serverUrl.setText(TvFragment.getEditServer().getServerHost());
+            serverUrl.setText(oldServer.getServerHost());
             EditText serverLabel = mView.findViewById(R.id.serverLabel);
-            serverLabel.setText(TvFragment.getEditServer().getServerName());
+            serverLabel.setText(oldServer.getServerName());
             EditText serverUsername = mView.findViewById(R.id.serverUsername);
-            serverUsername.setText(TvFragment.getEditServer().getUsername());
+            serverUsername.setText(oldServer.getUsername());
             EditText serverPassword = mView.findViewById(R.id.serverPassword);
-            serverPassword.setText(TvFragment.getEditServer().getPassword());
+            serverPassword.setText(oldServer.getPassword());
+
             addServerButton.setText("Save");
         }
 

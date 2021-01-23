@@ -18,7 +18,7 @@
     <string name="pref_force_tv_key" translatable="false">pref_force_tv</string>
 
     <!-- defaults -->
-    <string name="pref_default_api_base_url" formatted="false" translatable="false">https://troll.tv</string>
+    <string name="pref_default_api_base_url" formatted="false" translatable="false">https://tilvids.com</string>
     <string name="app_default_theme" translatable="false">AppTheme.BLUE</string>
 
     <!-- Pref internal -->

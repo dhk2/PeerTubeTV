@@ -174,6 +174,17 @@ public class ServerAddressBookActivity extends CommonActivity implements AddServ
 
     }
 
+    public void addServer(Server server)
+    {
+        Log.d(TAG, "addServer from server");
+
+        mServerViewModel.insert(server);
+
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.remove(addServerFragment);
+        fragmentTransaction.commit();
+    }
+
     public void testServer()
     {
 

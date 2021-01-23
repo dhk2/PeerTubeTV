@@ -127,7 +127,7 @@ public class TvFragment extends BrowseFragment {
     private  boolean drawWhenLoaded=true;
     private String apiBaseURL="";
     private String currentServer="";
-
+    private String currentUser="";
     private ServerViewModel mServerViewModel;
     private AddServerFragment addServerFragment;
     private FloatingActionButton floatingActionButton;
@@ -138,10 +138,10 @@ public class TvFragment extends BrowseFragment {
 
         Log.i(TAG, "onCreate");
         super.onActivityCreated(savedInstanceState);
-        Log.i(TAG, "getting videos");
-        initVideos();
         Log.i(TAG, "getting servers");
         initServers();
+        Log.i(TAG, "getting videos");
+        initVideos();
         Log.i(TAG, "preparing background manager");
         prepareBackgroundManager();
         Log.i(TAG, "setting up ui elements");
@@ -168,6 +168,41 @@ public class TvFragment extends BrowseFragment {
         ServerDao mServerDao = db.serverDao();
         currentServer = APIUrlHelper.getUrl(getContext());
         allServers = mServerDao.getDeadServers();
+        Log.e("wtf","current server");
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        currentUser=sharedPref.getString(getString(R.string.pref_auth_username),"");
+        Log.e("wtf","current user"+currentUser);
+        //allServers.clear();
+        if (allServers.size()==0){
+            Server newServer=new Server("The Grand Illusion");
+            newServer.setServerHost("https://tgi.hosted.spacebear.ee");
+            newServer.setUsername("");
+            newServer.setPassword("");
+            mServerDao.insert(newServer);
+
+            newServer=new Server("TILVids");
+            newServer.setServerHost("https://tilvids.com");
+            newServer.setUsername("");
+            newServer.setPassword("");
+            mServerDao.insert(newServer);
+
+            newServer=new Server("Diode Zone");
+            newServer.setServerHost("https://diode.zone");
+            newServer.setUsername("");
+            newServer.setPassword("");
+            mServerDao.insert(newServer);
+
+            newServer=new Server("OpenTube");
+            newServer.setServerHost("https://open.tube");
+            newServer.setUsername("");
+            newServer.setPassword("");
+            mServerDao.insert(newServer);
+
+        }
+        allServers = mServerDao.getDeadServers();
+        for (Server server:allServers){
+            Log.e("wtf",server.toString());
+        }
     }
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void initVideos() {
@@ -175,11 +210,11 @@ public class TvFragment extends BrowseFragment {
         currentRow=null;
         currentVideo=null;
         currentRowNumber=0;
+
         head = new LeanBackHeaderCategory("Chronological");
         head.setLoading(true);
         head.setAdapterIndex(ui.size());
         pullVideos(head,0,10,"-createdAt",null);
-
         ui.add(head);
 
         head = new LeanBackHeaderCategory("Local");
@@ -188,13 +223,11 @@ public class TvFragment extends BrowseFragment {
         pullVideos(head,0,10,"-createdAt","local");
         ui.add(head);
 
-
         head = new LeanBackHeaderCategory("Trending");
         head.setLoading(true);
         head.setAdapterIndex(ui.size());
         pullVideos(head,0,10,"-trending",null);
         ui.add(head);
-
 
         head = new LeanBackHeaderCategory("Most Viewed");
         head.setLoading(true);
@@ -235,12 +268,13 @@ public class TvFragment extends BrowseFragment {
 
         GridItemPresenter mGridPresenter = new GridItemPresenter();
         ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);
+/*
         gridRowAdapter.add("Servers");
         gridRowAdapter.add("Settings");
         gridRowAdapter.add("Account");
         gridRowAdapter.add("Refresh");
         rowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
-
+ */
         gridHeader = new HeaderItem("Servers");
         mGridPresenter = new GridItemPresenter();
         gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);
@@ -375,7 +409,9 @@ public class TvFragment extends BrowseFragment {
                 } else {
                     //change to selected server
                     String serverUrl = APIUrlHelper.cleanServerUrl(server.getServerHost());
-                    Log.e("WTF", serverUrl + " == " + currentServer);
+                    Log.e("WTF", server.getServerHost() + " == " + currentServer+ " and furthermore "+server.getUsername()+"  ==  "+currentUser);
+                    currentUser=server.getUsername();
+                    Log.e("just before put",serverUrl+"><"+currentUser+"\n"+server.toString());
                     editor.putString(getContext().getString(R.string.pref_api_base_key), serverUrl);
                     editor.apply();
 
@@ -445,6 +481,9 @@ public class TvFragment extends BrowseFragment {
             if (Session.getInstance().isLoggedIn() && !subscriptions) {
                 drawWhenLoaded=true;
                 getHistoryAndSubscriptions();
+            }
+            if (item instanceof Server){
+                Log.e("WTF", ((Server) item).getServerHost() + " == " + currentServer+ " and furthermore "+ ((Server) item).getUsername()+"  ==  "+currentUser);
             }
             if (item instanceof Video) {
                 currentRow= row.getHeaderItem().getName();
@@ -549,7 +588,7 @@ public class TvFragment extends BrowseFragment {
                 } else {
                     ((TextView) viewHolder.view).setText(server.getUsername()+"\n@\n"+ server.getServerName());
                 }
-                if (server.getServerHost().equals(currentServer)){
+                if (server.getServerHost().equals(currentServer) && server.getUsername().equals(currentUser)){
                     ((TextView) viewHolder.view).setTextSize((float) (((TextView) viewHolder.view).getTextSize()*(1.2)));
                     ((TextView) viewHolder.view).setBackgroundColor(lb_basic_card_content_text_color);
                 }
