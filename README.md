@@ -13,15 +13,15 @@
 </p>
 
 ## Description
-PeerTube is a federated video streaming platform that is community-owned and ad-free, with no vendor lock-in. This client allows you to watch and browse videos on a server of your choice in the PeerTube network.
+PeerTube is a federated video streaming platform that is community-owned and ad-free, with no vendor lock-in. This client allows you to watch and browse videos on a server of your choice in the PeerTube network. Forked from Thorium to use The javascript client in a webview instead of an exoplayer service. This allows the clients to share data with other users and maximize server bandwidth.
 
-This client comes preconfigured with one PeerTube server managed by the application creator - not the PeerTube project itself, which lists more on http://instances.joinpeertube.org/ - to allow you to have a taste of what the client is capable of. Choose your server to tune your experience!
+This client comes with a few random peertube instances - not the PeerTube project itself, which lists more on http://instances.joinpeertube.org/ - to allow you to have a taste of what the client is capable of. Choose your server to tune your experience!
 
-Please note this is app is in beta and is still missing a lot of features.
+Please note this is app is in alpha and is still missing a lot of features.
 
 
 ## Download
-* Beta Test on Google Play: https://play.google.com/store/apps/details?id=net.anticlimacticteleservices.peertube
+* Beta Test on Google Play: https://play.google.com/store/apps/details?id=net.anticlimacticteleservices.peertube (currently rejected for unspecified copyright violation)
 * install from Apk on Github: https://github.com/dhk2/PeerTubeTV/tree/develop/app/release
 
 
@@ -30,23 +30,19 @@ Please note this is app is in beta and is still missing a lot of features.
 * Recent Videos
 * Trending Videos
 * Endless scrolling
-* Pull to refresh
-* Very Basic Torrent playback
+* Uses javascript client in webview, shares content with other users by default
 * Change Server
 * Search
-* Themes / Dark mode
-* Background playback
+* Themes / Dark mode needs work
 * NSFW Filter option
 * Authentication / Login
 * Like/dislike video
 * Video speed selection
-* Video quality selection
+
 * Server selection
 
 ## Coming soon
-
-* Video Playback via WebRTC
-* Video overlay play and draggable video window
+* Video quality selection
 * Comment videos
 * Report Videos
 * User / Channel Overview Page
