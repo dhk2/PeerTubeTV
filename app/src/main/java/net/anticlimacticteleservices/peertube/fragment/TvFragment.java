@@ -429,13 +429,14 @@ public class TvFragment extends BrowseFragment {
                         );
                     }
                     //redraw interface with new server info
+                    getActivity().getFragmentManager().popBackStack();
                     ui = new ArrayList<LeanBackHeaderCategory>();
                     subscriptions = false;
                     Toast.makeText(getContext(), getContext().getString(R.string.server_selection_set_server, serverUrl), Toast.LENGTH_LONG).show();
                     currentServer=serverUrl;
                     initVideos();
                     drawWhenLoaded = true;
-                    getActivity().getFragmentManager().popBackStack();
+
                 }
             } else if (item instanceof String) {
                 Toast.makeText(getActivity(), ((String) item), Toast.LENGTH_SHORT).show();

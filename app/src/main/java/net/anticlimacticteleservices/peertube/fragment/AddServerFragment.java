@@ -18,14 +18,18 @@
 package net.anticlimacticteleservices.peertube.fragment;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
@@ -42,8 +46,12 @@ import com.google.android.material.tooltip.TooltipDrawable;
 import net.anticlimacticteleservices.peertube.R;
 import net.anticlimacticteleservices.peertube.activity.SearchServerActivity;
 import net.anticlimacticteleservices.peertube.activity.ServerAddressBookActivity;
+import net.anticlimacticteleservices.peertube.activity.TvActivity;
 import net.anticlimacticteleservices.peertube.database.Server;
+import net.anticlimacticteleservices.peertube.database.ServerViewModel;
 import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
+import net.anticlimacticteleservices.peertube.network.Session;
+import net.anticlimacticteleservices.peertube.service.LoginService;
 
 import java.util.Objects;
 
@@ -66,7 +74,7 @@ public class AddServerFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        oldServer=TvFragment.getEditServer();
     }
 
     @Override
@@ -100,40 +108,91 @@ public class AddServerFragment extends Fragment {
             EditText selectedLabel = mView.findViewById(R.id.serverLabel);
             if ( TextUtils.isEmpty(selectedLabel.getText())){
                 selectedLabel.setError( act.getString(R.string.server_book_label_is_required ));
-                Toast.makeText(act, R.string.invalid_url, Toast.LENGTH_LONG).show();
+                Toast.makeText(act,"server name can't be blank", Toast.LENGTH_LONG).show();
                 formValid = false;
-            } else {
-                oldServer.setServerName(selectedLabel.getText().toString());
             }
-
             // validate url
             EditText selectedUrl = mView.findViewById(R.id.serverUrl);
             String serverUrl = APIUrlHelper.cleanServerUrl(selectedUrl.getText().toString());
             selectedUrl.setText(serverUrl);
-            oldServer.setServerHost(serverUrl);
+
 
             if (!Patterns.WEB_URL.matcher(serverUrl).matches()) {
                 selectedUrl.setError( act.getString(R.string.server_book_valid_url_is_required ) );
                 Toast.makeText(act, R.string.invalid_url, Toast.LENGTH_LONG).show();
                 formValid = false;
             }
-            EditText selectedUserName =mView.findViewById(R.id.serverUsername);
-            oldServer.setUsername(String.valueOf(selectedUserName.getText()));
 
-            EditText selectedUserPassword =mView.findViewById(R.id.serverPassword);
-            oldServer.setPassword(String.valueOf(selectedUserPassword.getText()));
-            Log.e("wtf",oldServer.toString());
             if (formValid) {
                 if (act instanceof ServerAddressBookActivity) {
+                    EditText selectedUserName = mView.findViewById(R.id.serverUsername);
+                    EditText selectedUserPassword = mView.findViewById(R.id.serverPassword);
+                    Server proposedServer=new Server(selectedLabel.getText().toString());
                     if (oldServer !=null) {
-                        ((ServerAddressBookActivity) act).addServer(oldServer);
-                    } else {
-                        ((ServerAddressBookActivity) act).addServer(mView);
+                        proposedServer = oldServer;
+                        proposedServer.setServerName(selectedLabel.getText().toString());
                     }
+                    proposedServer.setUsername(String.valueOf(selectedUserName.getText()));
+                    proposedServer.setServerHost(serverUrl);
+                    proposedServer.setPassword(String.valueOf(selectedUserPassword.getText()));
+                    Log.e("wtf",proposedServer.toString());
+                    ((ServerAddressBookActivity) act).addServer(proposedServer);
+
+
+                    //change to selected server
+                    SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putString(getContext().getString(R.string.pref_api_base_key), serverUrl);
+                    editor.apply();
+
+                    Session session = Session.getInstance();
+                    if (session.isLoggedIn()) {
+                        session.invalidate();
+                    }
+
+                    // attempt authentication if we have a username
+                    if (!TextUtils.isEmpty(proposedServer.getUsername())) {
+                        Log.e("wtf","attemptig to logo nwith "+proposedServer.getUsername());
+                        LoginService.Authenticate(
+                                proposedServer.getUsername(),
+                                proposedServer.getPassword()
+                        );
+                    }
+                    Intent intent = new Intent(getContext(), TvActivity.class);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                    getContext().startActivity(intent);
+
                 }
+
             }
 
         });
+
+
+        Button deleteServerButton = mView.findViewById(R.id.deleteServerButton);
+        deleteServerButton.setVisibility(View.INVISIBLE);
+        deleteServerButton.dispatchSystemUiVisibilityChanged(View.INVISIBLE);
+        deleteServerButton.setOnClickListener(view -> {
+            ServerViewModel mServerViewModel = new ViewModelProvider(this).get(ServerViewModel.class);
+            new AlertDialog.Builder(getContext())
+                    .setTitle(getString(R.string.server_book_del_alert_title))
+                    .setMessage(getString(R.string.server_book_del_alert_msg))
+                    .setPositiveButton(android.R.string.yes, (dialog, which) -> {
+                        mServerViewModel.delete(oldServer);
+                        Intent intent = new Intent(getContext(), TvActivity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                        getContext().startActivity(intent);
+                        Runtime.getRuntime().exit(0);
+                    })
+                    .setNegativeButton(android.R.string.no, (dialog, which) -> {
+                        Log.e("WTF","wtf mate");
+                    })
+                    .setIcon(android.R.drawable.ic_dialog_alert)
+                    .show();
+            ;
+
+        });
+
 
 //        Button testServerButton = mView.findViewById(R.id.testServerButton);
 //        testServerButton.setOnClickListener(view -> {
@@ -150,6 +209,7 @@ public class AddServerFragment extends Fragment {
         });
         oldServer=TvFragment.getEditServer();
         if (null != oldServer){
+            deleteServerButton.setVisibility(View.VISIBLE);
             Log.e("wtf",oldServer.toString());
             EditText serverUrl = mView.findViewById(R.id.serverUrl);
             serverUrl.setText(oldServer.getServerHost());
