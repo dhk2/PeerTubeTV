@@ -114,7 +114,7 @@ public class AccountActivity extends CommonActivity {
         videoAdapter = new VideoAdapter(new ArrayList<>(), AccountActivity.this);
         recyclerViewVideos.setAdapter(videoAdapter);
 
-        channelAdapter = new ChannelAdapter(new ArrayList<>(), AccountActivity.this);
+         channelAdapter = new ChannelAdapter(new ArrayList<>(), AccountActivity.this);
         recyclerViewChannels.setAdapter(channelAdapter);
 
 

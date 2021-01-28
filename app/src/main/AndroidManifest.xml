@@ -64,6 +64,11 @@
             android:name="net.anticlimacticteleservices.peertube.activity.SettingsActivity"
             android:label="@string/title_activity_settings"
             android:theme="@style/AppTheme.NoActionBar" />
+        <!-- register user -->
+        <activity
+            android:name="net.anticlimacticteleservices.peertube.activity.RegisterAccountActivity"
+            android:label="@string/title_activity_settings"
+            android:theme="@style/AppTheme.NoActionBar" />
         <!-- Server Selection -->
         <activity
             android:name="net.anticlimacticteleservices.peertube.activity.SearchServerActivity"

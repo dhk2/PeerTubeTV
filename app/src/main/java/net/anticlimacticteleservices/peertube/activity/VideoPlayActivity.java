@@ -208,7 +208,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
                 getPackageName())
         );
 
-        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
             setContentView(R.layout.activity_video_play_webview);
             Log.e("WTF","using full screen webview");
         }
@@ -221,7 +221,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         String videoUuid = intent.getStringExtra(VideoListActivity.EXTRA_VIDEOID);
         videoPlayerFragment=null;
         WebviewFragment webviewFragment=null;
-        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
             webviewFragment = (WebviewFragment) getSupportFragmentManager().findFragmentById(R.id.webview_fragment);
             assert webviewFragment !=null;
         }
@@ -231,13 +231,13 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         }
         String playingVideo;
         Log.v(TAG,"attempting to play "+videoUuid);
-        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
             playingVideo = WebviewFragment.getVideoUuid();
         } else {
             playingVideo = videoPlayerFragment.getVideoUuid();
         }
         Log.v(TAG, "oncreate click: " + videoUuid + " is trying to replace: " + playingVideo);
-        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
             webviewFragment.start(videoUuid);
         }
         else {
@@ -269,7 +269,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         String videoUuid="";
         videoUuid = intent.getStringExtra(VideoListActivity.EXTRA_VIDEOID);
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
-        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
             webviewFragment = (WebviewFragment) getSupportFragmentManager().findFragmentById(R.id.webview_fragment);
             assert webviewFragment != null;
             playingVideo = webviewFragment.getVideoUuid();
@@ -282,7 +282,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         Log.v(TAG, "new intent click: " + videoUuid + " is trying to replace: " + playingVideo);
 
 
-        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
                 webviewFragment.start(videoUuid);
         }
         else {
@@ -324,7 +324,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
         RelativeLayout.LayoutParams params;
 
-        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
             webviewFragment = (WebviewFragment) fragmentManager.findFragmentById(R.id.webview_fragment);
             assert webviewFragment !=null;
             params = (RelativeLayout.LayoutParams) webviewFragment.requireView().getLayoutParams();
@@ -337,7 +337,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         params.width = FrameLayout.LayoutParams.MATCH_PARENT;
         params.height = isLandscape ? FrameLayout.LayoutParams.MATCH_PARENT : (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 250, getResources().getDisplayMetrics());
 
-        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
             webviewFragment.requireView().setLayoutParams(params);
         } else {
             videoPlayerFragment.requireView().setLayoutParams(params);

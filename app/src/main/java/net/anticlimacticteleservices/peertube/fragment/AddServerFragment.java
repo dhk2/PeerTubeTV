@@ -44,6 +44,7 @@ import android.widget.Toast;
 import com.google.android.material.tooltip.TooltipDrawable;
 
 import net.anticlimacticteleservices.peertube.R;
+import net.anticlimacticteleservices.peertube.activity.RegisterAccountActivity;
 import net.anticlimacticteleservices.peertube.activity.SearchServerActivity;
 import net.anticlimacticteleservices.peertube.activity.ServerAddressBookActivity;
 import net.anticlimacticteleservices.peertube.activity.TvActivity;
@@ -56,16 +57,26 @@ import net.anticlimacticteleservices.peertube.service.LoginService;
 import java.util.Objects;
 
 import static android.app.Activity.RESULT_OK;
+import static net.anticlimacticteleservices.peertube.activity.VideoListActivity.EXTRA_VIDEOID;
 
 
 public class AddServerFragment extends Fragment {
 
     public static final String TAG = "AddServerFragment";
     public static final Integer PICK_SERVER = 1;
+    public static final Integer CREATE_USER = 2;
 
     private OnFragmentInteractionListener mListener;
     private Server oldServer=null;
     private View mView;
+    EditText serverUrl ;
+    EditText serverLabel;
+    EditText serverUsername ;
+    EditText serverPassword;
+    Button addServerButton;
+    Button deleteServerButton;
+    Button registerAccountButton;
+    Button pickServerUrl ;
 
     public AddServerFragment() {
         // Required empty public constructor
@@ -84,9 +95,18 @@ public class AddServerFragment extends Fragment {
         // Inflate the layout for this fragment
 
         mView = inflater.inflate(R.layout.fragment_add_server, container, false);
-
-        // bind button click
+        //create ui elements
+        EditText serverUrl = mView.findViewById(R.id.serverUrl);
+        EditText serverLabel = mView.findViewById(R.id.serverLabel);
+        EditText serverUsername = mView.findViewById(R.id.serverUsername);
+        EditText serverPassword = mView.findViewById(R.id.serverPassword);
         Button addServerButton = mView.findViewById(R.id.addServerButton);
+        Button deleteServerButton = mView.findViewById(R.id.deleteServerButton);
+        Button registerAccountButton = mView.findViewById(R.id.registerUserButton);
+        Button pickServerUrl = mView.findViewById(R.id.pickServerUrl);
+        // bind button click
+
+
         addServerButton.setOnClickListener(view -> {
 
             Activity act = getActivity();
@@ -105,36 +125,32 @@ public class AddServerFragment extends Fragment {
 
             }
 
-            EditText selectedLabel = mView.findViewById(R.id.serverLabel);
-            if ( TextUtils.isEmpty(selectedLabel.getText())){
-                selectedLabel.setError( act.getString(R.string.server_book_label_is_required ));
+            if ( TextUtils.isEmpty(serverLabel.getText())){
+                serverLabel.setError( act.getString(R.string.server_book_label_is_required ));
                 Toast.makeText(act,"server name can't be blank", Toast.LENGTH_LONG).show();
                 formValid = false;
             }
             // validate url
-            EditText selectedUrl = mView.findViewById(R.id.serverUrl);
-            String serverUrl = APIUrlHelper.cleanServerUrl(selectedUrl.getText().toString());
-            selectedUrl.setText(serverUrl);
+            String selectedUrl = APIUrlHelper.cleanServerUrl(serverUrl.getText().toString());
+            serverUrl.setText(selectedUrl);
 
 
-            if (!Patterns.WEB_URL.matcher(serverUrl).matches()) {
-                selectedUrl.setError( act.getString(R.string.server_book_valid_url_is_required ) );
+            if (!Patterns.WEB_URL.matcher(selectedUrl).matches()) {
+                serverUrl.setError( act.getString(R.string.server_book_valid_url_is_required ) );
                 Toast.makeText(act, R.string.invalid_url, Toast.LENGTH_LONG).show();
                 formValid = false;
             }
 
             if (formValid) {
                 if (act instanceof ServerAddressBookActivity) {
-                    EditText selectedUserName = mView.findViewById(R.id.serverUsername);
-                    EditText selectedUserPassword = mView.findViewById(R.id.serverPassword);
-                    Server proposedServer=new Server(selectedLabel.getText().toString());
+                    Server proposedServer=new Server(serverLabel.getText().toString());
                     if (oldServer !=null) {
                         proposedServer = oldServer;
-                        proposedServer.setServerName(selectedLabel.getText().toString());
+                        proposedServer.setServerName(serverLabel.getText().toString());
                     }
-                    proposedServer.setUsername(String.valueOf(selectedUserName.getText()));
-                    proposedServer.setServerHost(serverUrl);
-                    proposedServer.setPassword(String.valueOf(selectedUserPassword.getText()));
+                    proposedServer.setUsername(String.valueOf(serverUsername.getText()));
+                    proposedServer.setServerHost(selectedUrl);
+                    proposedServer.setPassword(String.valueOf(serverPassword.getText()));
                     Log.e("wtf",proposedServer.toString());
                     ((ServerAddressBookActivity) act).addServer(proposedServer);
 
@@ -142,7 +158,7 @@ public class AddServerFragment extends Fragment {
                     //change to selected server
                     SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
                     SharedPreferences.Editor editor = sharedPref.edit();
-                    editor.putString(getContext().getString(R.string.pref_api_base_key), serverUrl);
+                    editor.putString(getContext().getString(R.string.pref_api_base_key), selectedUrl);
                     editor.apply();
 
                     Session session = Session.getInstance();
@@ -169,8 +185,8 @@ public class AddServerFragment extends Fragment {
         });
 
 
-        Button deleteServerButton = mView.findViewById(R.id.deleteServerButton);
-        deleteServerButton.setVisibility(View.INVISIBLE);
+
+        deleteServerButton.setVisibility(View.GONE);
         deleteServerButton.dispatchSystemUiVisibilityChanged(View.INVISIBLE);
         deleteServerButton.setOnClickListener(view -> {
             ServerViewModel mServerViewModel = new ViewModelProvider(this).get(ServerViewModel.class);
@@ -193,16 +209,22 @@ public class AddServerFragment extends Fragment {
 
         });
 
+        registerAccountButton.setOnClickListener(view -> {
+            Activity act = getActivity();
+            if (act instanceof ServerAddressBookActivity) {
+                Intent intent = new Intent(getContext(), RegisterAccountActivity.class);
+                intent.putExtra(Intent.EXTRA_USER,serverUsername.getText().toString());
+                intent.putExtra(Intent.EXTRA_TEXT,serverPassword.getText().toString());
+                intent.putExtra(Intent.EXTRA_TITLE,serverLabel.getText().toString());
+                intent.putExtra(Intent.EXTRA_ORIGINATING_URI,serverUrl.getText().toString());
+                // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-//        Button testServerButton = mView.findViewById(R.id.testServerButton);
-//        testServerButton.setOnClickListener(view -> {
-//            Activity act = getActivity();
-//            if (act instanceof ServerAddressBookActivity) {
-//                ((ServerAddressBookActivity) act).testServer();
-//            }
-//        });
+                getContext().startActivity(intent);
+            }
+        });
 
-        Button pickServerUrl = mView.findViewById(R.id.pickServerUrl);
+
+
         pickServerUrl.setOnClickListener(view -> {
             Intent intentServer = new Intent(getActivity(), SearchServerActivity.class);
             this.startActivityForResult(intentServer, PICK_SERVER);
@@ -211,13 +233,9 @@ public class AddServerFragment extends Fragment {
         if (null != oldServer){
             deleteServerButton.setVisibility(View.VISIBLE);
             Log.e("wtf",oldServer.toString());
-            EditText serverUrl = mView.findViewById(R.id.serverUrl);
             serverUrl.setText(oldServer.getServerHost());
-            EditText serverLabel = mView.findViewById(R.id.serverLabel);
             serverLabel.setText(oldServer.getServerName());
-            EditText serverUsername = mView.findViewById(R.id.serverUsername);
             serverUsername.setText(oldServer.getUsername());
-            EditText serverPassword = mView.findViewById(R.id.serverPassword);
             serverPassword.setText(oldServer.getPassword());
 
             addServerButton.setText("Save");

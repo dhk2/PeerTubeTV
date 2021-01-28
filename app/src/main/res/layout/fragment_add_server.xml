@@ -73,5 +73,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/server_book_add_add_button" />
+    <Button
+        android:id="@+id/deleteServerButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/server_book_del_alert_title" />
+    <Button
+        android:id="@+id/registerUserButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/server_book_create_user_button" />
 
 </LinearLayout>
