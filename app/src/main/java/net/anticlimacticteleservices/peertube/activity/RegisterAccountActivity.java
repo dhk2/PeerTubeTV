@@ -57,9 +57,14 @@ import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
 import net.anticlimacticteleservices.peertube.helper.ErrorHelper;
 import net.anticlimacticteleservices.peertube.model.Avatar;
 import net.anticlimacticteleservices.peertube.model.Me;
+import net.anticlimacticteleservices.peertube.model.RemoteServer;
 import net.anticlimacticteleservices.peertube.model.Result;
+import net.anticlimacticteleservices.peertube.model.ServerAbout;
+import net.anticlimacticteleservices.peertube.model.ServerConfig;
+import net.anticlimacticteleservices.peertube.model.ServerConfigInstance;
 import net.anticlimacticteleservices.peertube.model.User;
 import net.anticlimacticteleservices.peertube.model.VideoList;
+import net.anticlimacticteleservices.peertube.network.GetConfigDataService;
 import net.anticlimacticteleservices.peertube.network.GetUserService;
 import net.anticlimacticteleservices.peertube.network.GetVideoDataService;
 import net.anticlimacticteleservices.peertube.network.RetrofitInstance;
@@ -80,7 +85,7 @@ import static net.anticlimacticteleservices.peertube.fragment.AddServerFragment.
 
 
 public class RegisterAccountActivity extends CommonActivity {
-
+    String serverTerms;
     @Override
     public boolean onSupportNavigateUp() {
         finish(); // close this activity as oppose to navigating up
@@ -105,8 +110,60 @@ public class RegisterAccountActivity extends CommonActivity {
         newUserName.setText(intent.getStringExtra(Intent.EXTRA_USER));
         String serverUrl=intent.getStringExtra(Intent.EXTRA_ORIGINATING_URI);
         String serverLabel=intent.getStringExtra(Intent.EXTRA_TITLE);
+
         ServerViewModel
         mServerViewModel = new ViewModelProvider(this).get(ServerViewModel.class);
+
+        String apiBaseURL =serverUrl+"/api/v1/";
+        GetConfigDataService service = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetConfigDataService.class);
+        Call<ServerConfig> callConfig = service.getConfigTest();
+        callConfig.enqueue(new Callback<ServerConfig>() {
+            @Override
+            public void onResponse(Call<ServerConfig> call, Response<ServerConfig> response) {
+                Log.e("wtf","loaded config "+response.raw());
+                ServerConfig thisServer = response.body();
+                Log.e("WTF",thisServer.getInstance().getName()+"  "+thisServer.getInstance().getShortDescription());
+                if (!thisServer.getSignup().isAllowed()){
+                    Toast.makeText(getContext(), "Server not allowing new accounts", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                if (!thisServer.getSignup().isAllowedForCurrentIP()){
+                    Toast.makeText(getContext(), "Server not allowing new accounts from your IP address", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ServerConfig> call, Throwable t) {
+                Log.e("wtf"," failed to load config "+t.toString());
+                Toast.makeText(getContext(), t.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        Call<ServerAbout> callAbout = service.getServerAbout();
+        callAbout.enqueue(new Callback<ServerAbout>() {
+            @Override
+            public void onResponse(Call<ServerAbout> call, Response<ServerAbout> response) {
+                Log.e("wtf","loaded config "+response.raw());
+                ServerAbout serverAbout = response.body();
+                Log.e("WTF",serverAbout.getInstance().getName()+"  "+serverAbout.getInstance().getTerms());
+                serverTerms=serverAbout.getInstance().getTerms();
+            }
+
+            @Override
+            public void onFailure(Call<ServerAbout> call, Throwable t) {
+                Log.e("wtf"," failed to load config "+t.toString());
+                Toast.makeText(getContext(), t.toString(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+
+
+
+
+
+
 
         createUserButton.setEnabled(false);
         createUserButton.setOnClickListener(view -> {
@@ -142,13 +199,13 @@ public class RegisterAccountActivity extends CommonActivity {
             if (formValid) {
                 String password = newUserPassword.getText().toString();
                 Log.e("WTF","need to create user:["+userName+"]["+password+"]["+email+"]");
-                String apiBaseURL = APIUrlHelper.getUrlWithVersion(this);
-                GetUserService service = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetUserService.class);
-                Call<Result> call = service.registerUser(userName,email,password);
-                call.enqueue(new Callback<Result>() {
+                String registerApiBaseURL = APIUrlHelper.getUrlWithVersion(this);
+                GetUserService registerService = RetrofitInstance.getRetrofitInstance(registerApiBaseURL).create(GetUserService.class);
+                Call<Result> registerCall = registerService.registerUser(userName,email,password);
+                registerCall.enqueue(new Callback<Result>() {
                     @Override
                     public void onResponse(Call<Result> call, Response<Result> response) {
-                        Toast.makeText(getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
+                        //Toast.makeText(getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
                         Log.e("WTF", "succeeded"+response);
                         switch (response.code()){
                             case 204:
@@ -194,10 +251,14 @@ public class RegisterAccountActivity extends CommonActivity {
                                 break;
                             case 409:
                                 Log.e("wtf","Account or email already exists");
+                                Toast.makeText(getApplicationContext(),"Account name or email already exists on instance", Toast.LENGTH_SHORT).show();
                                 break;
                             case 400:
                                 Log.e("wtf","400 error could mean password too short");
-
+                                Toast.makeText(getApplicationContext(),"Error 400, check email address is valid ad passe", Toast.LENGTH_SHORT).show();
+                            default:
+                                Log.e("wtf",response.message()+" "+response.errorBody());
+                                Toast.makeText(getApplicationContext(),"failed to create account on remote server", Toast.LENGTH_SHORT).show();
                         }
                     }
 
@@ -214,7 +275,7 @@ public class RegisterAccountActivity extends CommonActivity {
 
         agree.setOnClickListener (view -> {
 
-            terms.setText("need to actually get the terms from the site to display here");
+            terms.setText(serverTerms);
             terms.setVisibility(View.VISIBLE);
             createUserButton.setEnabled(true);
         });

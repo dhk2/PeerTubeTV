@@ -212,14 +212,19 @@ public class AddServerFragment extends Fragment {
         registerAccountButton.setOnClickListener(view -> {
             Activity act = getActivity();
             if (act instanceof ServerAddressBookActivity) {
-                Intent intent = new Intent(getContext(), RegisterAccountActivity.class);
-                intent.putExtra(Intent.EXTRA_USER,serverUsername.getText().toString());
-                intent.putExtra(Intent.EXTRA_TEXT,serverPassword.getText().toString());
-                intent.putExtra(Intent.EXTRA_TITLE,serverLabel.getText().toString());
-                intent.putExtra(Intent.EXTRA_ORIGINATING_URI,serverUrl.getText().toString());
-                // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                if (!Patterns.WEB_URL.matcher(serverUrl.getText().toString()).matches()) {
+                    serverUrl.setError( act.getString(R.string.server_book_valid_url_is_required ) );
+                    Toast.makeText(act, R.string.invalid_url, Toast.LENGTH_LONG).show();
+                } else {
+                    Intent intent = new Intent(getContext(), RegisterAccountActivity.class);
+                    intent.putExtra(Intent.EXTRA_USER, serverUsername.getText().toString());
+                    intent.putExtra(Intent.EXTRA_TEXT, serverPassword.getText().toString());
+                    intent.putExtra(Intent.EXTRA_TITLE, serverLabel.getText().toString());
+                    intent.putExtra(Intent.EXTRA_ORIGINATING_URI, serverUrl.getText().toString());
+                    // intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
-                getContext().startActivity(intent);
+                    getContext().startActivity(intent);
+                }
             }
         });
 

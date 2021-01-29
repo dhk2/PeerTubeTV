@@ -60,9 +60,5 @@ public interface GetUserService {
     );
 
 
-    @Headers("Content-Type: application/x-www-form-urlencoded")
-    @POST("/api/v1/users/register")
-    Call<String> registerUserhack(@Body String fuck);
-
 
 }
