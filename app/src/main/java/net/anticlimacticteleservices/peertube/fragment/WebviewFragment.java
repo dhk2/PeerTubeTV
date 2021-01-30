@@ -36,6 +36,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 
@@ -48,6 +50,8 @@ import net.anticlimacticteleservices.peertube.model.Seed;
 import net.anticlimacticteleservices.peertube.model.Video;
 import net.anticlimacticteleservices.peertube.network.GetVideoDataService;
 import net.anticlimacticteleservices.peertube.network.RetrofitInstance;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -127,7 +131,12 @@ public class WebviewFragment extends Fragment {
 
 
 
+                FragmentManager fragmentManager = getParentFragmentManager();
+                AtomicReference<FragmentTransaction> transaction = new AtomicReference<>(fragmentManager.beginTransaction()
+                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out));
 
+                transaction.get().hide(videoMetaDataFragment);
+                transaction.get().commit();
                 moreButton=activity.findViewById((R.id.moreButton));
                 moreButton.setOnClickListener(v -> {
 
@@ -144,27 +153,23 @@ public class WebviewFragment extends Fragment {
                                 webView.loadUrl("javascript:videojsPlayer.playbackRate(2)");
                                 return true;
                             case R.id.dumb:
-                                /*
-                                webView.evaluateJavascript("videojsPlayer.networkState() ", new ValueCallback<String>() {
-                                    @Override
-                                    public void onReceiveValue(String s) {
-                                        Log.d("WTF", s); // Print "test"
-                                        // data = s; // The value that I would like to return
-                                    }
-                                });
+                                transaction.set(fragmentManager.beginTransaction()
+                                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out));
+
+                                transaction.get().show(videoMetaDataFragment);
+                                transaction.get().commit();
+                                hideVideo();
                                 return true;
 
-                                 */
-                            /*case R.id.video_details:
-                                webView.evaluateJavascript("Android.debug('test')", new ValueCallback<String>() {
-                                    @Override
-                                    public void onReceiveValue(String s) {
-                                        Log.d("WTF", s); // Print "test"
-                                        // data = s; // The value that I would like to return
-                                    }
-                                });
+                            case R.id.video_details:
+                                transaction.set(fragmentManager.beginTransaction()
+                                        .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out));
+
+                                transaction.get().hide(videoMetaDataFragment);
+                                transaction.get().commit();
+                                showVideo();
                                 return true;
-                            */
+
                             case R.id.cancel:
 
                                 Log.e("WTF","figure out cancel");
@@ -206,7 +211,7 @@ public class WebviewFragment extends Fragment {
                         if (progress == 100) {
                             Log.e("WTF", "progress " + progress);
                             webView.requestFocus();
-                            bruteForcePlay();
+                            autoPlay();
                         }
                     }
                 });
@@ -282,6 +287,43 @@ public class WebviewFragment extends Fragment {
             public void onReceiveValue(String s) {
                     Log.d("WTF", "pausing video <" + s+">"+s.length());
                 }
+        });
+    }
+    public void hideVideo(){
+        webView.evaluateJavascript("javascript:videojsPlayer.hide() ", new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String s) {
+                Log.d("WTF", "hiding video <" + s+">"+s.length());
+            }
+        });
+    }
+    public void showVideo(){
+        webView.evaluateJavascript("javascript:videojsPlayer.show() ", new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String s) {
+                Log.d("WTF", "showing video <" + s+">"+s.length());
+            }
+        });
+    }
+    public void autoPlay(){
+        webView.evaluateJavascript("javascript:videojsPlayer.autoplay() ", new ValueCallback<String>() {
+            @Override
+            public void onReceiveValue(String s) {
+                //kludge because null, empty, and direct comparison all failed, but null returns as 4 long and empty returns as 2 long
+                if (s.length()>2) {
+                    smashes++;
+                    if (smashes==5000){
+                        Log.e("wtf","autoplay commnand not working, returning "+s);
+                    }
+                    bruteForcePlay();
+                }
+                else{
+                    Log.d("WTF", "exiting smash loop after "+smashes +" smashes because finally got <" + s+">"+s.length());
+                    smashes=0;
+                    playing=true;
+                }
+
+            }
         });
     }
 }

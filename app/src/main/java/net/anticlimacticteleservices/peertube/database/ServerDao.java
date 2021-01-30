@@ -24,6 +24,7 @@ import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Dao
@@ -40,4 +41,7 @@ public interface ServerDao {
 
     @Query("SELECT * from server_table ORDER BY server_name DESC")
     LiveData<List<Server>> getAllServers();
+
+    @Query("SELECT * from server_table ORDER BY server_name DESC")
+    List<Server> getDeadServers();
 }

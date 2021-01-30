@@ -29,7 +29,7 @@ import android.widget.Toast;
 import net.anticlimacticteleservices.peertube.R;
 import net.anticlimacticteleservices.peertube.activity.SearchServerActivity;
 import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
-import net.anticlimacticteleservices.peertube.model.Server;
+import net.anticlimacticteleservices.peertube.model.RemoteServer;
 
 import java.util.ArrayList;
 
@@ -44,12 +44,12 @@ import static android.app.Activity.RESULT_OK;
 public class ServerSearchAdapter extends RecyclerView.Adapter<ServerSearchAdapter.AccountViewHolder> {
 
 
-    private ArrayList<Server> serverList;
+    private ArrayList<RemoteServer> remoteServerList;
     private SearchServerActivity activity;
     private String baseUrl;
 
-    public ServerSearchAdapter(ArrayList<Server> serverList, SearchServerActivity activity) {
-        this.serverList = serverList;
+    public ServerSearchAdapter(ArrayList<RemoteServer> remoteServerList, SearchServerActivity activity) {
+        this.remoteServerList = remoteServerList;
         this.activity = activity;
     }
 
@@ -67,35 +67,35 @@ public class ServerSearchAdapter extends RecyclerView.Adapter<ServerSearchAdapte
     @Override
     public void onBindViewHolder(@NonNull AccountViewHolder holder, int position) {
 
-        holder.name.setText(serverList.get(position).getName());
-        holder.host.setText(serverList.get(position).getHost());
+        holder.name.setText(remoteServerList.get(position).getName());
+        holder.host.setText(remoteServerList.get(position).getHost());
         holder.signupAllowed.setText(activity.getString(R.string.server_selection_signup_allowed, activity.getString(
-                serverList.get(position).getSignupAllowed() ?
+                remoteServerList.get(position).getSignupAllowed() ?
                         R.string.server_selection_signup_allowed_yes :
                         R.string.server_selection_signup_allowed_no
         )));
 
         holder.videoTotals.setText(
                 activity.getString(R.string.server_selection_video_totals,
-                        serverList.get(position).getTotalVideos().toString(),
-                        serverList.get(position).getTotalLocalVideos().toString()
+                        remoteServerList.get(position).getTotalVideos().toString(),
+                        remoteServerList.get(position).getTotalLocalVideos().toString()
                 ));
 
         // don't show description if it hasn't been changes from the default
-        if (!activity.getString(R.string.peertube_instance_search_default_description).equals(serverList.get(position).getShortDescription())) {
-            holder.shortDescription.setText(serverList.get(position).getShortDescription());
+        if (!activity.getString(R.string.peertube_instance_search_default_description).equals(remoteServerList.get(position).getShortDescription())) {
+            holder.shortDescription.setText(remoteServerList.get(position).getShortDescription());
             holder.shortDescription.setVisibility(View.VISIBLE);
         } else {
             holder.shortDescription.setVisibility(View.GONE);
         }
 
-        DefaultArtifactVersion serverVersion = new DefaultArtifactVersion(serverList.get(position).getVersion());
+        DefaultArtifactVersion serverVersion = new DefaultArtifactVersion(remoteServerList.get(position).getVersion());
 
         // at least version 2.2
         DefaultArtifactVersion minVersion22 = new DefaultArtifactVersion("2.2.0");
         if (serverVersion.compareTo(minVersion22) >= 0) {
             // show NSFW Icon
-            if (serverList.get(position).getNSFW()) {
+            if (remoteServerList.get(position).getNSFW()) {
                 holder.isNSFW.setVisibility(View.VISIBLE);
             }
         }
@@ -104,13 +104,13 @@ public class ServerSearchAdapter extends RecyclerView.Adapter<ServerSearchAdapte
         // select server
         holder.itemView.setOnClickListener(v -> {
 
-            String serverUrl = APIUrlHelper.cleanServerUrl(serverList.get(position).getHost());
+            String serverUrl = APIUrlHelper.cleanServerUrl(remoteServerList.get(position).getHost());
 
             Toast.makeText(activity, activity.getString(R.string.server_selection_set_server, serverUrl), Toast.LENGTH_LONG).show();
 
             Intent intent = new Intent();
             intent.putExtra("serverUrl", serverUrl);
-            intent.putExtra("serverName", serverList.get(position).getName());
+            intent.putExtra("serverName", remoteServerList.get(position).getName());
             activity.setResult(RESULT_OK, intent);
 
             activity.finish();
@@ -141,19 +141,19 @@ public class ServerSearchAdapter extends RecyclerView.Adapter<ServerSearchAdapte
 
     }
 
-    public void setData(ArrayList<Server> data) {
-        serverList.addAll(data);
+    public void setData(ArrayList<RemoteServer> data) {
+        remoteServerList.addAll(data);
         this.notifyDataSetChanged();
     }
 
     public void clearData() {
-        serverList.clear();
+        remoteServerList.clear();
         this.notifyDataSetChanged();
     }
 
     @Override
     public int getItemCount() {
-        return serverList.size();
+        return remoteServerList.size();
     }
 
     static class AccountViewHolder extends RecyclerView.ViewHolder {

@@ -17,13 +17,30 @@
  */
 package net.anticlimacticteleservices.peertube.network;
 
+import net.anticlimacticteleservices.peertube.database.Server;
 import net.anticlimacticteleservices.peertube.model.Config;
+import net.anticlimacticteleservices.peertube.model.RemoteServer;
+import net.anticlimacticteleservices.peertube.model.ServerAbout;
+import net.anticlimacticteleservices.peertube.model.ServerConfig;
+import net.anticlimacticteleservices.peertube.model.ServerConfigInstance;
+
 import retrofit2.Call;
 import retrofit2.http.GET;
+import retrofit2.http.Query;
 
 public interface GetConfigDataService {
 
     @GET("config")
     Call<Config> getConfigData();
+
+    @GET("config/custom")
+    Call<RemoteServer> getConfigCustom(
+    );
+
+    @GET("config")
+    Call<ServerConfig> getConfigTest();
+
+    @GET("config/about")
+    Call<ServerAbout> getServerAbout();
 
 }

@@ -67,18 +67,14 @@ public class ServerAddressBookActivity extends CommonActivity implements AddServ
         setContentView(R.layout.activity_server_address_book);
 
         // Attaching the layout to the toolbar object
-        Toolbar toolbar = findViewById(R.id.tool_bar_server_address_book);
+        //Toolbar toolbar = findViewById(R.id.tool_bar_server_address_book);
         // Setting toolbar as the ActionBar with setSupportActionBar() call
-        setSupportActionBar(toolbar);
-        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_baseline_close_24);
+        //setSupportActionBar(toolbar);
+      //  Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+   //     getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_baseline_close_24);
 
         mServerViewModel = new ViewModelProvider(this).get(ServerViewModel.class);
 
-        showServers();
-
-        floatingActionButton = findViewById(R.id.add_server);
-        floatingActionButton.setOnClickListener(view -> {
 
             Log.d(TAG, "Click");
 
@@ -89,9 +85,6 @@ public class ServerAddressBookActivity extends CommonActivity implements AddServ
             fragmentTransaction.replace(R.id.server_book, addServerFragment);
             fragmentTransaction.commit();
 
-            floatingActionButton.hide();
-
-        });
 
     }
 
@@ -179,6 +172,17 @@ public class ServerAddressBookActivity extends CommonActivity implements AddServ
 
         floatingActionButton.show();
 
+    }
+
+    public void addServer(Server server)
+    {
+        Log.d(TAG, "addServer from server");
+
+        mServerViewModel.insert(server);
+
+        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+        fragmentTransaction.remove(addServerFragment);
+        fragmentTransaction.commit();
     }
 
     public void testServer()

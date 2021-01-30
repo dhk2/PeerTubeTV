@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="16dp"
+    android:paddingTop="100dp"
+    android:paddingRight="16dp"
+    tools:context=".fragment.AddServerFragment"
+    android:background="?android:colorBackground">
+
+    <EditText
+        android:id="@+id/newUserName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/prompt_name"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:focusedByDefault="true"
+        android:nextFocusDown="@id/serverUrl"
+        android:inputType="textPersonName" />
+    <EditText
+        android:id="@+id/newUserEmail"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:ems="10"
+        android:hint="@string/prompt_email"
+        android:inputType="textEmailAddress" />
+    <EditText
+        android:id="@+id/newUserPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:hint="@string/server_book_add_password"
+        android:inputType="textPassword" />
+
+    <CheckBox
+        android:id="@+id/ageCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="I am at least 16 years old and agree to the Terms of this instance" />
+
+    <EditText
+        android:id="@+id/terms"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:gravity="start|top"
+        android:inputType="textMultiLine"
+        android:visibility="invisible" />
+
+
+    <Button
+            android:id="@+id/createUserButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/action_add_user" />
+
+
+</LinearLayout>

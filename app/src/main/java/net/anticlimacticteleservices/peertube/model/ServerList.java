@@ -24,10 +24,10 @@ import java.util.ArrayList;
 public class ServerList {
 
     @SerializedName("data")
-    private ArrayList<Server> serverList;
+    private ArrayList<RemoteServer> remoteServerList;
 
-    public ArrayList<Server> getServerArrayList() {
-        return serverList;
+    public ArrayList<RemoteServer> getServerArrayList() {
+        return remoteServerList;
     }
 
 }

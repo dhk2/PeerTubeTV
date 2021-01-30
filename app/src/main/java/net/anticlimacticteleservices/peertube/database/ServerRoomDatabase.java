@@ -37,7 +37,7 @@ public abstract class ServerRoomDatabase extends RoomDatabase {
 
     static final ExecutorService databaseWriteExecutor =
             Executors.newFixedThreadPool(NUMBER_OF_THREADS);
-
+//TODO implement some other way to load the initial server list to keep android studio from bitching about a main thread trivial database call
     public static ServerRoomDatabase getDatabase(final Context context) {
         if (INSTANCE == null) {
             synchronized (ServerRoomDatabase.class) {
@@ -45,6 +45,7 @@ public abstract class ServerRoomDatabase extends RoomDatabase {
                     if (INSTANCE == null) {
                         INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                                 ServerRoomDatabase.class, "server_database")
+                                .allowMainThreadQueries()
                                 .build();
                     }
                 }

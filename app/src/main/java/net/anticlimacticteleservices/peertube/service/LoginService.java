@@ -19,14 +19,17 @@ package net.anticlimacticteleservices.peertube.service;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import net.anticlimacticteleservices.peertube.R;
 import net.anticlimacticteleservices.peertube.application.AppApplication;
+import net.anticlimacticteleservices.peertube.fragment.TvFragment;
 import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
 import net.anticlimacticteleservices.peertube.model.OauthClient;
 import net.anticlimacticteleservices.peertube.model.Token;
@@ -80,6 +83,7 @@ public class LoginService {
                             password
                     );
                     call2.enqueue(new Callback<Token>() {
+                        @RequiresApi(api = Build.VERSION_CODES.M)
                         @Override
                         public void onResponse(@NonNull Call<Token> call2, @NonNull retrofit2.Response<Token> response2) {
 
@@ -92,9 +96,8 @@ public class LoginService {
                                 editor.putString(context.getString(R.string.pref_token_refresh), token.getRefreshToken());
                                 editor.putString(context.getString(R.string.pref_token_type), token.getTokenType());
                                 editor.apply();
-
-                                Log.wtf(TAG, "Logged in");
-
+                                String URL = sharedPref.getString(context.getString(R.string.pref_api_base_key), context.getResources().getString(R.string.pref_default_api_base_url));
+                                Log.wtf(TAG, "Logged in "+URL);
                                 Toast.makeText(context, context.getString(R.string.authentication_login_success), Toast.LENGTH_LONG).show();
 
 

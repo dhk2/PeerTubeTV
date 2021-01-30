@@ -17,9 +17,15 @@
  */
 package net.anticlimacticteleservices.peertube.network;
 
+import com.google.android.exoplayer2.util.Log;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class RetrofitInstance {
 
@@ -27,20 +33,24 @@ public class RetrofitInstance {
     private static String baseUrl;
 
     public static Retrofit getRetrofitInstance(String newBaseUrl) {
+        Log.e("newBaseurl",newBaseUrl);
         if (retrofit == null || !newBaseUrl.equals(baseUrl)) {
             baseUrl = newBaseUrl;
+            Log.e("baseurl",baseUrl);
 
             OkHttpClient.Builder okhttpClientBuilder = new OkHttpClient.Builder();
 
+            Gson gson = new GsonBuilder()
+                    .create();
             okhttpClientBuilder.addInterceptor(new AuthorizationInterceptor());
             okhttpClientBuilder.authenticator(new AccessTokenAuthenticator());
-
             retrofit = new retrofit2.Retrofit.Builder()
                     .client(okhttpClientBuilder.build())
                     .baseUrl(baseUrl)
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create(gson))
                     .build();
         }
+
         return retrofit;
     }
 }

@@ -84,4 +84,8 @@ public class Server {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public String  toString(){
+        return("name:["+serverName+"]\nurl:["+serverHost+"]\nname:["+username+"]\npassword:"+password.length());
+    }
 }

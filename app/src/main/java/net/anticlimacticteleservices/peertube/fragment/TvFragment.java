@@ -1,6 +1,9 @@
 package net.anticlimacticteleservices.peertube.fragment;
 
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
+
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -11,6 +14,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.text.InputType;
+import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -23,35 +27,46 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.leanback.app.BackgroundManager;
 import androidx.leanback.app.BrowseFragment;
 import androidx.leanback.widget.ArrayObjectAdapter;
 import androidx.leanback.widget.HeaderItem;
 import androidx.leanback.widget.ListRow;
 import androidx.leanback.widget.ListRowPresenter;
-import androidx.leanback.widget.ObjectAdapter;
 import androidx.leanback.widget.OnItemViewClickedListener;
 import androidx.leanback.widget.OnItemViewSelectedListener;
 import androidx.leanback.widget.Presenter;
 import androidx.leanback.widget.Row;
 import androidx.leanback.widget.RowPresenter;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelStore;
+import androidx.lifecycle.ViewModelStoreOwner;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
 import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import net.anticlimacticteleservices.peertube.R;
 import net.anticlimacticteleservices.peertube.activity.AccountActivity;
 import net.anticlimacticteleservices.peertube.activity.ServerAddressBookActivity;
 import net.anticlimacticteleservices.peertube.activity.SettingsActivity;
 import net.anticlimacticteleservices.peertube.activity.TvActivity;
-import net.anticlimacticteleservices.peertube.activity.VideoListActivity;
 import net.anticlimacticteleservices.peertube.activity.VideoPlayActivity;
+import net.anticlimacticteleservices.peertube.database.Server;
+import net.anticlimacticteleservices.peertube.database.ServerDao;
+import net.anticlimacticteleservices.peertube.database.ServerRoomDatabase;
+import net.anticlimacticteleservices.peertube.database.ServerViewModel;
 import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
 import net.anticlimacticteleservices.peertube.helper.ErrorHelper;
 import net.anticlimacticteleservices.peertube.model.LeanBackHeaderCategory;
+import net.anticlimacticteleservices.peertube.model.ServerList;
 import net.anticlimacticteleservices.peertube.model.Video;
 import net.anticlimacticteleservices.peertube.model.VideoList;
 import net.anticlimacticteleservices.peertube.network.GetUserService;
@@ -59,9 +74,9 @@ import net.anticlimacticteleservices.peertube.network.GetVideoDataService;
 import net.anticlimacticteleservices.peertube.network.RetrofitInstance;
 import net.anticlimacticteleservices.peertube.network.Session;
 import net.anticlimacticteleservices.peertube.presenter.CardPresenter;
+import net.anticlimacticteleservices.peertube.service.LoginService;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -71,6 +86,11 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static net.anticlimacticteleservices.peertube.R.color.lb_action_text_color;
+import static net.anticlimacticteleservices.peertube.R.color.lb_basic_card_bg_color;
+import static net.anticlimacticteleservices.peertube.R.color.lb_basic_card_content_text_color;
+import static net.anticlimacticteleservices.peertube.R.color.lb_basic_card_title_text_color;
+import static net.anticlimacticteleservices.peertube.R.color.lb_tv_white;
 import static net.anticlimacticteleservices.peertube.activity.VideoListActivity.EXTRA_VIDEOID;
 import static net.anticlimacticteleservices.peertube.activity.VideoListActivity.SWITCH_INSTANCE;
 
@@ -82,6 +102,7 @@ public class TvFragment extends BrowseFragment {
     private static final int GRID_ITEM_HEIGHT = 200;
     private static final int NUM_ROWS = 1;
     private static final int NUM_COLS = 15;
+    private static Server editServer;
 
     private final Handler mHandler = new Handler();
     private Drawable mDefaultBackground;
@@ -89,14 +110,7 @@ public class TvFragment extends BrowseFragment {
     private Timer mBackgroundTimer;
     private String mBackgroundUri;
     private BackgroundManager mBackgroundManager;
-    private List<Video> list;
-    private List<Video> localVideos;
-    private List<Video> TrendingVideos;
-    private List<Video> likedVideos;
-    private List<Video> recentVideos;
-    private List<Video> subscriptionVideos;
-    private List<Video> myVideos;
-    private List<Video> History;
+
     private int currentStart = 0;
     private int count = 12;
     private String sort = "-createdAt";
@@ -104,20 +118,28 @@ public class TvFragment extends BrowseFragment {
     private String searchQuery = "";
     private Boolean subscriptions = false;
     private ArrayList<LeanBackHeaderCategory> ui;
-    private TextView emptyView;
-    private RecyclerView recyclerView;
+    private List<net.anticlimacticteleservices.peertube.database.Server> allServers;
     private String currentRow;
     private Video currentVideo;
     private long currentRowNumber;
     private LeanBackHeaderCategory head;
     private int isLoading = 0;
-    public  boolean forceRefresh;
+    private  boolean drawWhenLoaded=true;
+    private String apiBaseURL="";
+    private String currentServer="";
+    private String currentUser="";
+    private ServerViewModel mServerViewModel;
+    private AddServerFragment addServerFragment;
+    private FloatingActionButton floatingActionButton;
+    private FragmentManager fragmentManager;
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
 
         Log.i(TAG, "onCreate");
         super.onActivityCreated(savedInstanceState);
+        Log.i(TAG, "getting servers");
+        initServers();
         Log.i(TAG, "getting videos");
         initVideos();
         Log.i(TAG, "preparing background manager");
@@ -139,16 +161,60 @@ public class TvFragment extends BrowseFragment {
             mBackgroundTimer.cancel();
         }
     }
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void initServers(){
 
+        ServerRoomDatabase db = ServerRoomDatabase.getDatabase(getContext());
+        ServerDao mServerDao = db.serverDao();
+        currentServer = APIUrlHelper.getUrl(getContext());
+        allServers = mServerDao.getDeadServers();
+        Log.e("wtf","current server");
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        currentUser=sharedPref.getString(getString(R.string.pref_auth_username),"");
+        Log.e("wtf","current user"+currentUser);
+        //allServers.clear();
+        if (allServers.size()==0){
+            Server newServer=new Server("The Grand Illusion");
+            newServer.setServerHost("https://tgi.hosted.spacebear.ee");
+            newServer.setUsername("");
+            newServer.setPassword("");
+            mServerDao.insert(newServer);
+
+            newServer=new Server("TILVids");
+            newServer.setServerHost("https://tilvids.com");
+            newServer.setUsername("");
+            newServer.setPassword("");
+            mServerDao.insert(newServer);
+
+            newServer=new Server("Diode Zone");
+            newServer.setServerHost("https://diode.zone");
+            newServer.setUsername("");
+            newServer.setPassword("");
+            mServerDao.insert(newServer);
+
+            newServer=new Server("OpenTube");
+            newServer.setServerHost("https://open.tube");
+            newServer.setUsername("");
+            newServer.setPassword("");
+            mServerDao.insert(newServer);
+
+        }
+        allServers = mServerDao.getDeadServers();
+        for (Server server:allServers){
+            Log.e("wtf",server.toString());
+        }
+    }
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void initVideos() {
         ui=new ArrayList<LeanBackHeaderCategory>();
+        currentRow=null;
+        currentVideo=null;
+        currentRowNumber=0;
 
         head = new LeanBackHeaderCategory("Chronological");
         head.setLoading(true);
         head.setAdapterIndex(ui.size());
         pullVideos(head,0,10,"-createdAt",null);
-
         ui.add(head);
 
         head = new LeanBackHeaderCategory("Local");
@@ -157,13 +223,11 @@ public class TvFragment extends BrowseFragment {
         pullVideos(head,0,10,"-createdAt","local");
         ui.add(head);
 
-
         head = new LeanBackHeaderCategory("Trending");
         head.setLoading(true);
         head.setAdapterIndex(ui.size());
         pullVideos(head,0,10,"-trending",null);
         ui.add(head);
-
 
         head = new LeanBackHeaderCategory("Most Viewed");
         head.setLoading(true);
@@ -181,20 +245,15 @@ public class TvFragment extends BrowseFragment {
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void loadRows() {
         int selected=-1;
+        Log.e("wtf","server base url"+apiBaseURL);
         ArrayObjectAdapter rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
         CardPresenter cardPresenter = new CardPresenter();
 
         for ( LeanBackHeaderCategory head : ui){
             ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(cardPresenter);
-            Log.e("WTF", head.getName()+" "+head.getVideos().size());
             if (head.getVideos().size()>0) {
                 for (Video item : head.getVideos()) {
                     listRowAdapter.add(item);
-                    if ((null != currentVideo) && (currentVideo.equals((Video)item))){
-                        if (selected<0 && currentRow.equals(head.getName())){
-                            selected = (listRowAdapter.size() - 1);
-                        }
-                    }
                 }
                 HeaderItem headerItem = new HeaderItem(head.getName());
                 ListRow toAdd = new ListRow(headerItem, listRowAdapter);
@@ -209,76 +268,27 @@ public class TvFragment extends BrowseFragment {
 
         GridItemPresenter mGridPresenter = new GridItemPresenter();
         ArrayObjectAdapter gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);
+/*
         gridRowAdapter.add("Servers");
         gridRowAdapter.add("Settings");
         gridRowAdapter.add("Account");
         gridRowAdapter.add("Refresh");
         rowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
-
-        setAdapter(rowsAdapter);
-        if (selected>0){
-            this.setSelectedPosition((int) currentRowNumber, false, new ListRowPresenter.SelectItemViewHolderTask(selected));
+ */
+        gridHeader = new HeaderItem("Servers");
+        mGridPresenter = new GridItemPresenter();
+        gridRowAdapter = new ArrayObjectAdapter(mGridPresenter);
+        if (null != allServers){
+            for (Server knownServer:allServers){
+                gridRowAdapter.add(knownServer);
+            }
         }
+        gridRowAdapter.add("Add Server");
+        rowsAdapter.add(new ListRow(gridHeader, gridRowAdapter));
+        setAdapter(rowsAdapter);
         if (Session.getInstance().isLoggedIn() && !subscriptions) {
-
-            subscriptions=true;
-            LeanBackHeaderCategory headsub = new LeanBackHeaderCategory("Subscriptions");
-            headsub.setLoading(true);
-            String apiBaseURL = APIUrlHelper.getUrlWithVersion(getContext());
-            GetUserService userService = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetUserService.class);
-            Call<VideoList> call;
-            call = userService.getVideosSubscripions(0,50, "-createdAt");
-
-            Log.d("WTF","subscriptions URL Called"+ call.request().url() + "");
-            call.enqueue(new Callback<VideoList>() {
-                @Override
-                public void onResponse(@NonNull Call<VideoList> call, @NonNull Response<VideoList> response) {
-                    if (response.body() != null) {
-                        ArrayList<Video> videoList = response.body().getVideoArrayList();
-                        if (videoList != null) {
-                            Log.e("wtf", head.getName()+" is getting response subscriptions adding "+videoList.size());
-                            headsub.addAllVideo(videoList);
-                            //loadRows();
-                            headsub.setLoading(false);
-                        }
-                    } else {
-                        Log.e("WTF", "subscripotions failed to load");
-                    }
-                    headsub.setLoading(false);
-                }
-                @Override
-                public void onFailure(Call<VideoList> call, Throwable t) {
-                }
-            });
-            ui.add(0,headsub);
-            head = new LeanBackHeaderCategory("History");
-            head.setLoading(true);
-            call = userService.getVideosHistory(0,50, null);
-
-            Log.d("WTF","history URL Called"+ call.request().url() + "");
-            call.enqueue(new Callback<VideoList>() {
-                @Override
-                public void onResponse(@NonNull Call<VideoList> call, @NonNull Response<VideoList> response) {
-                    if (response.body() != null) {
-                        ArrayList<Video> videoList = response.body().getVideoArrayList();
-                        if (videoList != null) {
-                            Log.e("wtf", head.getName()+" is getting response history adding "+videoList.size());
-                            head.addAllVideo(videoList);
-                            loadRows();
-                            head.setLoading(false);
-                        }
-                    }
-                    else {
-                        Log.e("WTF", "history failed to load");
-                    }
-                    head.setLoading(false);
-                }
-                @Override
-                public void onFailure(Call<VideoList> call, Throwable t) {
-                }
-            });
-            ui.add(head);
-
+            drawWhenLoaded=true;
+            getHistoryAndSubscriptions();
         }
     }
 
@@ -386,7 +396,49 @@ public class TvFragment extends BrowseFragment {
                 intent.putExtra(EXTRA_VIDEOID, movie.getUuid());
                 getContext().startActivity(intent);
 
-             } else if (item instanceof String) {
+            } else if (item instanceof Server){
+                Server server = (Server)item;
+                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+                SharedPreferences.Editor editor = sharedPref.edit();
+                if (server.getServerHost().equals(currentServer)){
+                    //selected current server, open edit server dialog.
+                    editServer=server;
+                    Intent addressBookActivityIntent = new Intent(getActivity(), ServerAddressBookActivity.class);
+                    startActivityForResult(addressBookActivityIntent, SWITCH_INSTANCE);
+
+                } else {
+                    //change to selected server
+                    String serverUrl = APIUrlHelper.cleanServerUrl(server.getServerHost());
+                    Log.e("WTF", server.getServerHost() + " == " + currentServer+ " and furthermore "+server.getUsername()+"  ==  "+currentUser);
+                    currentUser=server.getUsername();
+                    Log.e("just before put",serverUrl+"><"+currentUser+"\n"+server.toString());
+                    editor.putString(getContext().getString(R.string.pref_api_base_key), serverUrl);
+                    editor.apply();
+
+                    // Logout if logged in
+                    Session session = Session.getInstance();
+                    if (session.isLoggedIn()) {
+                        session.invalidate();
+                    }
+
+                    // attempt authentication if we have a username
+                    if (!TextUtils.isEmpty(server.getUsername())) {
+                        LoginService.Authenticate(
+                                server.getUsername(),
+                                server.getPassword()
+                        );
+                    }
+                    //redraw interface with new server info
+                    getActivity().getFragmentManager().popBackStack();
+                    ui = new ArrayList<LeanBackHeaderCategory>();
+                    subscriptions = false;
+                    Toast.makeText(getContext(), getContext().getString(R.string.server_selection_set_server, serverUrl), Toast.LENGTH_LONG).show();
+                    currentServer=serverUrl;
+                    initVideos();
+                    drawWhenLoaded = true;
+
+                }
+            } else if (item instanceof String) {
                 Toast.makeText(getActivity(), ((String) item), Toast.LENGTH_SHORT).show();
                 if (item.equals("Settings")){
                     Intent settingsActivityIntent = new Intent(getActivity(), SettingsActivity.class);
@@ -407,9 +459,13 @@ public class TvFragment extends BrowseFragment {
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                     getContext().startActivity(intent);
                     Runtime.getRuntime().exit(0);
-
-                    initVideos();
                 }
+                if (item.equals("Add Server")){
+                    editServer=null;
+                    Intent addressBookActivityIntent = new Intent(getActivity(), ServerAddressBookActivity.class);
+                    startActivityForResult(addressBookActivityIntent, SWITCH_INSTANCE);
+                }
+
             }
         }
     }
@@ -422,6 +478,14 @@ public class TvFragment extends BrowseFragment {
                 Object item,
                 RowPresenter.ViewHolder rowViewHolder,
                 Row row) {
+            Log.e("wtf","on item selected");
+            if (Session.getInstance().isLoggedIn() && !subscriptions) {
+                drawWhenLoaded=true;
+                getHistoryAndSubscriptions();
+            }
+            if (item instanceof Server){
+                Log.e("WTF", ((Server) item).getServerHost() + " == " + currentServer+ " and furthermore "+ ((Server) item).getUsername()+"  ==  "+currentUser);
+            }
             if (item instanceof Video) {
                 currentRow= row.getHeaderItem().getName();
                 currentVideo = ((Video) item);
@@ -511,11 +575,26 @@ public class TvFragment extends BrowseFragment {
             return new ViewHolder(view);
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.M)
+        @SuppressLint("ResourceAsColor")
         @Override
         public void onBindViewHolder(ViewHolder viewHolder, Object item) {
+
             if (item instanceof Video) {
                 ((TextView) viewHolder.view).setText(((Video) item).getName());
-            } else {
+            } else if (item instanceof Server){
+                Server server =(Server)item;
+                if (server.getUsername().isEmpty()) {
+                    ((TextView) viewHolder.view).setText(server.getServerName());
+                } else {
+                    ((TextView) viewHolder.view).setText(server.getUsername()+"\n@\n"+ server.getServerName());
+                }
+                if (server.getServerHost().equals(currentServer) && server.getUsername().equals(currentUser)){
+                    ((TextView) viewHolder.view).setTextSize((float) (((TextView) viewHolder.view).getTextSize()*(1.2)));
+                    ((TextView) viewHolder.view).setBackgroundColor(lb_basic_card_content_text_color);
+                }
+            }
+            else {
                 ((TextView) viewHolder.view).setText((String) item);
             }
         }
@@ -528,7 +607,7 @@ public class TvFragment extends BrowseFragment {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
         String nsfw = sharedPref.getBoolean(getString(R.string.pref_show_nsfw_key), false) ? "both" : "false";
         Set<String> languages = sharedPref.getStringSet(getString(R.string.pref_video_language_key), null);
-        String apiBaseURL = APIUrlHelper.getUrlWithVersion(getContext());
+        apiBaseURL = APIUrlHelper.getUrlWithVersion(getContext());
         GetVideoDataService service = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetVideoDataService.class);
         GetUserService userService = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetUserService.class);
         Call<VideoList> call;
@@ -561,8 +640,18 @@ public class TvFragment extends BrowseFragment {
                                 listRowAdapter.add(toAdd);
                             }
                         }
-
-
+                        if (drawWhenLoaded) {
+                            boolean allLoaded=true;
+                            for (LeanBackHeaderCategory head : ui) {
+                                if (head.isLoading()){
+                                    allLoaded=false;
+                                }
+                            }
+                            if (allLoaded){
+                                drawWhenLoaded=false;
+                                loadRows();
+                            }
+                        }
                     }
 
 
@@ -573,14 +662,16 @@ public class TvFragment extends BrowseFragment {
             @Override
             public void onFailure(@NonNull Call<VideoList> call, @NonNull Throwable t) {
                 Log.wtf("err", t.fillInStackTrace());
+                ErrorHelper.showToastFromCommunicationError( getContext(), t );
             }
         });
     }
     public void setTitle(String title){
         setTitle(title);
     }
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void updateRows() {
-        if (forceRefresh){
+        if (drawWhenLoaded){
             loadRows();
         }
         ArrayObjectAdapter rowsAdapter = (ArrayObjectAdapter) this.getAdapter();
@@ -648,6 +739,96 @@ public class TvFragment extends BrowseFragment {
         });
     }
 
+    public static Server getEditServer() {
+        return editServer;
+    }
 
+    public void setEditServer(Server editServer) {
+        this.editServer = editServer;
+    }
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void getHistoryAndSubscriptions(){
+        subscriptions=true;
+        LeanBackHeaderCategory headsub = new LeanBackHeaderCategory("Subscriptions");
+        headsub.setLoading(true);
+        String apiBaseURL = APIUrlHelper.getUrlWithVersion(getContext());
+        GetUserService userService = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetUserService.class);
+        Call<VideoList> call;
+        call = userService.getVideosSubscripions(0,50, "-createdAt");
 
+        Log.d("WTF","subscriptions URL Called"+ call.request().url() + "");
+        call.enqueue(new Callback<VideoList>() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void onResponse(@NonNull Call<VideoList> call, @NonNull Response<VideoList> response) {
+                if (response.body() != null) {
+                    ArrayList<Video> videoList = response.body().getVideoArrayList();
+                    if (videoList != null) {
+                        Log.e("wtf", headsub.getName()+" is getting response, adding "+videoList.size());
+                        headsub.addAllVideo(videoList);
+                        //loadRows();
+                        headsub.setLoading(false);
+                    }
+                } else {
+                    Log.e("WTF", "subscripotions failed to load");
+                }
+                headsub.setLoading(false);
+                if (drawWhenLoaded) {
+                    boolean allLoaded=true;
+                    for (LeanBackHeaderCategory head : ui) {
+                        if (head.isLoading()){
+                            allLoaded=false;
+                        }
+                    }
+                    if (allLoaded){
+                        drawWhenLoaded=false;
+                        loadRows();
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<VideoList> call, Throwable t) {
+            }
+        });
+        ui.add(0,headsub);
+        LeanBackHeaderCategory headHistory = new LeanBackHeaderCategory("History");
+        headHistory.setLoading(true);
+        call = userService.getVideosHistory(0,50, null);
+
+        Log.d("WTF","history URL Called"+ call.request().url() + "");
+        call.enqueue(new Callback<VideoList>() {
+            @Override
+            public void onResponse(@NonNull Call<VideoList> call, @NonNull Response<VideoList> response) {
+                if (response.body() != null) {
+                    ArrayList<Video> videoList = response.body().getVideoArrayList();
+                    if (videoList != null) {
+                        Log.e("wtf", headHistory.getName()+" is getting response history adding "+videoList.size());
+                        headHistory.addAllVideo(videoList);
+                        loadRows();
+                        headHistory.setLoading(false);
+                    }
+                }
+                else {
+                    Log.e("WTF", "history failed to load");
+                }
+                headHistory.setLoading(false);
+                if (drawWhenLoaded) {
+                    boolean allLoaded=true;
+                    for (LeanBackHeaderCategory head : ui) {
+                        if (head.isLoading()){
+                            allLoaded=false;
+                        }
+                    }
+                    if (allLoaded){
+                        drawWhenLoaded=false;
+                        loadRows();
+                    }
+                }
+            }
+            @Override
+            public void onFailure(Call<VideoList> call, Throwable t) {
+            }
+        });
+        ui.add(headHistory);
+    }
 }

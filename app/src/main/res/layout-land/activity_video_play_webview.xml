@@ -24,19 +24,22 @@
             android:layout_below="@id/webview_fragment"
             android:orientation="vertical">
 
-            <ScrollView
-                android:id="@+id/login_form"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content">
-
-                <fragment
-                    android:id="@+id/video_meta_data_fragment"
-                    android:name="net.anticlimacticteleservices.peertube.fragment.VideoMetaDataFragment"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-
-            </ScrollView>
         </RelativeLayout>
+
+        <ScrollView
+            android:id="@+id/login_form"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="0dp">
+
+            <fragment
+                android:id="@+id/video_meta_data_fragment"
+                android:name="net.anticlimacticteleservices.peertube.fragment.VideoMetaDataFragment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </ScrollView>
 
 
     </RelativeLayout>

@@ -27,10 +27,13 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -42,6 +45,8 @@ import net.anticlimacticteleservices.peertube.helper.ErrorHelper;
 import net.anticlimacticteleservices.peertube.model.ServerList;
 import net.anticlimacticteleservices.peertube.network.GetServerListDataService;
 import net.anticlimacticteleservices.peertube.network.RetrofitInstance;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -73,17 +78,27 @@ public class SearchServerActivity extends CommonActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_server);
+        TextView textView = (TextView) findViewById(R.id.search_server_input_field);
+        textView.addTextChangedListener(new TextWatcher() {
+            public void afterTextChanged(Editable s) {
+                Log.e("WTF","text was changed top "+s.toString());
+            }
 
-        // Attaching the layout to the toolbar object
-        Toolbar toolbar = findViewById(R.id.tool_bar_server_selection);
-        // Setting toolbar as the ActionBar with setSupportActionBar() call
-        setSupportActionBar(toolbar);
-        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_baseline_close_24);
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                // TODO Auto-generated method stub
+            }
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // TODO Auto-generated method stub
+                loadServers(currentStart, count, s.toString());
+            }
+
+        });
 
         loadList();
 
     }
+
 
     TextView.OnEditorActionListener onSearchTextValidated = ( textView, i, keyEvent ) -> {
         if ( keyEvent != null && keyEvent.getKeyCode() == KeyEvent.KEYCODE_ENTER
