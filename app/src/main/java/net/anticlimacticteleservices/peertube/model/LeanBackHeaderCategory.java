@@ -10,6 +10,7 @@ public class LeanBackHeaderCategory implements Serializable {
     String name;
     boolean isLoading;
     ArrayList<Video> videos;
+    ArrayList<Channel> channels;
     int adapterIndex;
 
 
@@ -19,18 +20,21 @@ public class LeanBackHeaderCategory implements Serializable {
         this.isLoading =false;
         this.thumbnailURL ="";
         this.videos=new ArrayList<Video>();
+        this.channels=new ArrayList<Channel>();
     }
     public LeanBackHeaderCategory() {
         this.name = "";
         this.isLoading =false;
         this.thumbnailURL ="";
         this.videos=new ArrayList<Video>();
+        this.channels=new ArrayList<Channel>();
     }
     public LeanBackHeaderCategory(String name, ArrayList<Video> allVideos){
         this.name=name;
         this.thumbnailURL ="";
         this.isLoading =false;
         this.videos=allVideos;
+        this.channels=new ArrayList<Channel>();
     }
     public String getName() {
         return name;
@@ -60,6 +64,14 @@ public class LeanBackHeaderCategory implements Serializable {
 
     public void setVideos(ArrayList<Video> videos) { this.videos = videos; }
 
+    public ArrayList<Channel> getChannels() {
+        return channels;
+    }
+
+    public void setChannels(ArrayList<Channel> channels) {
+        this.channels = channels;
+    }
+
     public void addVideo(Video toAdd){
         for (Video test:this.videos){
             if (test.getUuid().equals(toAdd.getUuid())){
@@ -73,6 +85,21 @@ public class LeanBackHeaderCategory implements Serializable {
             this.videos = toAdd;
         } else {
             this.videos.addAll(toAdd);
+        }
+    }
+    public void addChannel(Channel toAdd){
+        for (Channel test:this.channels){
+            if (test.getUuid().equals(toAdd.getUuid())){
+                return;
+            }
+        }
+        this.channels.add(toAdd);
+    }
+    public void addAllChannels(ArrayList<Channel> toAdd){
+        if (this.channels == null){
+            this.channels = toAdd;
+        } else {
+            this.channels.addAll(toAdd);
         }
     }
 

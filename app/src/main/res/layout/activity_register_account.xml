@@ -21,7 +21,8 @@
         android:focusable="true"
         android:focusedByDefault="true"
         android:nextFocusDown="@id/serverUrl"
-        android:inputType="textPersonName" />
+        android:inputType="textPersonName"
+        android:autofillHints="" />
     <EditText
         android:id="@+id/newUserEmail"
         android:layout_width="fill_parent"
@@ -29,28 +30,33 @@
         android:layout_alignParentStart="true"
         android:ems="10"
         android:hint="@string/prompt_email"
-        android:inputType="textEmailAddress" />
+        android:inputType="textEmailAddress"
+        android:autofillHints="" />
     <EditText
         android:id="@+id/newUserPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
         android:hint="@string/server_book_add_password"
-        android:inputType="textPassword" />
+        android:inputType="textPassword"
+        android:autofillHints="" />
 
     <CheckBox
         android:id="@+id/ageCheckbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="I am at least 16 years old and agree to the Terms of this instance" />
+        android:text="I am at least 16 years old and agree to the Terms of this instance"
+        android:nextFocusForward="@string/server_book_create_user_button"
+        />
 
-    <EditText
+    <TextView
         android:id="@+id/terms"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:ems="10"
         android:gravity="start|top"
-        android:inputType="textMultiLine"
+        android:inputType="textLongMessage|textMultiLine"
+        android:text="Terms of site"
         android:visibility="invisible" />
 
 
@@ -58,6 +64,7 @@
             android:id="@+id/createUserButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:nextFocusUp="@id/ageCheckbox"
             android:text="@string/action_add_user" />
 
 

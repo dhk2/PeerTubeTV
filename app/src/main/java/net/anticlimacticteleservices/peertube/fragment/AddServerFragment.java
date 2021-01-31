@@ -34,6 +34,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -104,16 +105,24 @@ public class AddServerFragment extends Fragment {
         Button deleteServerButton = mView.findViewById(R.id.deleteServerButton);
         Button registerAccountButton = mView.findViewById(R.id.registerUserButton);
         Button pickServerUrl = mView.findViewById(R.id.pickServerUrl);
+
+        //hide keyboard when entering buttonnn sectionaaa
+        addServerButton.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                Log.e(TAG,"onn focus listener");
+                Keyboard();
+            }
+
+        });
         // bind button click
-
-
         addServerButton.setOnClickListener(view -> {
 
             Activity act = getActivity();
 
             boolean formValid = true;
 
-            // close keyboard
+            //  keyboard
             try {
                 assert act != null;
                 InputMethodManager inputManager = (InputMethodManager)
@@ -151,7 +160,7 @@ public class AddServerFragment extends Fragment {
                     proposedServer.setUsername(String.valueOf(serverUsername.getText()));
                     proposedServer.setServerHost(selectedUrl);
                     proposedServer.setPassword(String.valueOf(serverPassword.getText()));
-                    Log.e("wtf",proposedServer.toString());
+                    Log.e(TAG,proposedServer.toString());
                     ((ServerAddressBookActivity) act).addServer(proposedServer);
 
 
@@ -168,7 +177,7 @@ public class AddServerFragment extends Fragment {
 
                     // attempt authentication if we have a username
                     if (!TextUtils.isEmpty(proposedServer.getUsername())) {
-                        Log.e("wtf","attemptig to logo nwith "+proposedServer.getUsername());
+                        Log.e(TAG,"attemptig to logo nwith "+proposedServer.getUsername());
                         LoginService.Authenticate(
                                 proposedServer.getUsername(),
                                 proposedServer.getPassword()
@@ -201,7 +210,7 @@ public class AddServerFragment extends Fragment {
                         Runtime.getRuntime().exit(0);
                     })
                     .setNegativeButton(android.R.string.no, (dialog, which) -> {
-                        Log.e("WTF","wtf mate");
+                        Log.e(TAG,"wtf mate");
                     })
                     .setIcon(android.R.drawable.ic_dialog_alert)
                     .show();
@@ -237,7 +246,7 @@ public class AddServerFragment extends Fragment {
         oldServer=TvFragment.getEditServer();
         if (null != oldServer){
             deleteServerButton.setVisibility(View.VISIBLE);
-            Log.e("wtf",oldServer.toString());
+            Log.e(TAG,oldServer.toString());
             serverUrl.setText(oldServer.getServerHost());
             serverLabel.setText(oldServer.getServerName());
             serverUsername.setText(oldServer.getUsername());
@@ -289,5 +298,14 @@ public class AddServerFragment extends Fragment {
     public interface OnFragmentInteractionListener {
         // TODO: Update argument type and name
         void onFragmentInteraction(Uri uri);
+    }
+    void Keyboard(){
+        //  keyboard
+        try {
+            InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Activity.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(getView().getWindowToken(), 0);
+        } catch (Exception e) {
+
+        }
     }
 }

@@ -81,7 +81,7 @@ public class SearchServerActivity extends CommonActivity {
         TextView textView = (TextView) findViewById(R.id.search_server_input_field);
         textView.addTextChangedListener(new TextWatcher() {
             public void afterTextChanged(Editable s) {
-                Log.e("WTF","text was changed top "+s.toString());
+                Log.e(TAG,"text was changed top "+s.toString());
             }
 
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -164,7 +164,7 @@ public class SearchServerActivity extends CommonActivity {
         GetServerListDataService service = RetrofitInstance.getRetrofitInstance(
                 APIUrlHelper.getServerIndexUrl(SearchServerActivity.this)
         ).create(GetServerListDataService.class);
-        Log.e("WTF","loaad servers searching for "+searchtext);
+        Log.e(TAG,"loaad servers searching for "+searchtext);
         if ( !searchtext.equals( lastSearchtext ) )
         {
             currentStart = 0;

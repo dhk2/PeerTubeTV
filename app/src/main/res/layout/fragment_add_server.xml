@@ -21,7 +21,8 @@
         android:focusable="true"
         android:focusedByDefault="true"
         android:nextFocusDown="@id/serverUrl"
-        android:inputType="textPersonName" />
+        android:inputType="textPersonName"
+        android:autofillHints="" />
 
     <RelativeLayout
         android:layout_height="wrap_content"
@@ -35,7 +36,8 @@
             android:ems="10"
             android:hint="@string/server_book_add_server_url"
             android:inputType="textUri"
-            android:layout_toStartOf="@+id/pickServerUrl"/>
+            android:layout_toStartOf="@+id/pickServerUrl"
+            android:autofillHints="" />
 
         <Button
             android:layout_alignParentEnd="true"
@@ -52,7 +54,8 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:hint="@string/server_book_add_username"
-        android:inputType="textPersonName" />
+        android:inputType="textPersonName"
+        android:autofillHints="" />
 
     <EditText
         android:id="@+id/serverPassword"
@@ -60,7 +63,8 @@
         android:layout_height="wrap_content"
         android:ems="10"
         android:hint="@string/server_book_add_password"
-        android:inputType="textPassword" />
+        android:inputType="textPassword"
+        android:autofillHints="" />
 
 <!--    <Button-->
 <!--        android:id="@+id/testServerButton"-->

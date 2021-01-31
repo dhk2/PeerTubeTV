@@ -15,6 +15,7 @@ import androidx.leanback.widget.Presenter;
 import com.bumptech.glide.Glide;
 
 import net.anticlimacticteleservices.peertube.R;
+import net.anticlimacticteleservices.peertube.model.Channel;
 import net.anticlimacticteleservices.peertube.model.Video;
 
 import java.sql.Time;
@@ -95,57 +96,73 @@ public class CardPresenter extends Presenter {
 
     @Override
     public void onBindViewHolder(Presenter.ViewHolder viewHolder, Object item) {
-        Video movie = (Video) item;
+        Video movie;
         ImageCardView cardView = (ImageCardView) viewHolder.view;
+        Log.d(TAG, "onBindViewHolder");
+        if (item instanceof Video){
+            movie = (Video) item;
+            if (movie.getName() != null) {
+                long millisLeft=movie.getDuration()*1000l;
+                String hour =  String.format("%02d", millisLeft/(3600l*1000l));
+                String minute = String.format("%02d",millisLeft/(60l*1000l) % 60l);
+                String second = String.format("%02d",millisLeft/1000l % 60l);
+                String dateString ="";
+                String iconString="";
+                if (hour.equals("00")){
+                    dateString="";
+                } else if (hour.startsWith("0")){
+                    dateString=hour.substring(1)+":";
+                } else {
+                    dateString=hour+":";
+                }
 
-        Log.i(TAG, "onBindViewHolder");
-        if (movie.getName() != null) {
-            long millisLeft=movie.getDuration()*1000l;
-            String hour =  String.format("%02d", millisLeft/(3600l*1000l));
-            String minute = String.format("%02d",millisLeft/(60l*1000l) % 60l);
-            String second = String.format("%02d",millisLeft/1000l % 60l);
-            String dateString ="";
-            String iconString="";
-            if (hour.equals("00")){
-                dateString="";
-            } else if (hour.startsWith("0")){
-                dateString=hour.substring(1)+":";
-            } else {
-                dateString=hour+":";
-            }
+                if (minute.startsWith("0") && (dateString.isEmpty())){
+                    dateString=dateString+minute.substring(1)+":";
+                } else {
+                    dateString=dateString+minute+":";
+                }
+                dateString=dateString+second;
+                if (movie.getViews()>0) {
+                    iconString= " \uD83D\uDC41" + movie.getViews();
+                }
+                if (movie.getLikes()>0){
+                    iconString=iconString+" \uD83D\uDC4D"+movie.getLikes();
+                }
+                if (movie.getDislikes()>0){
+                    iconString=iconString+" \uD83D\uDC4E"+movie.getDislikes();
+                }
+                if (movie.getNsfw()){
+                    iconString=iconString+"\uD83D\uDD1E";
+                }
+                cardView.setTitleText(iconString+"  "+movie.getName());
+                cardView.setContentText(dateString+"  "+movie.getAccount().getDisplayName());
+                cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
 
-            if (minute.startsWith("0") && (dateString.isEmpty())){
-                dateString=dateString+minute.substring(1)+":";
-            } else {
-                dateString=dateString+minute+":";
+                //TODO support blurring of thumbnail based on user account settings.
+                Log.i(TAG,"thumbnailpath "+movie.getAccount().getHost()+movie.getThumbnailPath());
+                Glide.with(viewHolder.view.getContext())
+                        .load("https://"+movie.getAccount().getHost()+movie.getThumbnailPath())
+                        .centerCrop()
+                        .error(mDefaultCardImage)
+                        .into(cardView.getMainImageView());
             }
-            dateString=dateString+second;
-            if (movie.getViews()>0) {
-                iconString= " \uD83D\uDC41" + movie.getViews();
+        }
+        if (item instanceof Channel){
+            Channel channel = (Channel) item;
+            if (channel !=null) {
+                cardView.setTitleText(channel.getDisplayName());
+                cardView.setContentText(channel.getDescription());
+                cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
+                if (null != channel.getAvatar()) {
+                    Glide.with(viewHolder.view.getContext())
+                            .load(channel.getAvatar().getPath())
+                            .centerCrop()
+                            .error(mDefaultCardImage)
+                            .into(cardView.getMainImageView());
+                }
             }
-            if (movie.getLikes()>0){
-                iconString=iconString+" \uD83D\uDC4D"+movie.getLikes();
-            }
-            if (movie.getDislikes()>0){
-                iconString=iconString+" \uD83D\uDC4E"+movie.getDislikes();
-            }
-            if (movie.getNsfw()){
-                iconString=iconString+"\uD83D\uDD1E";
-            }
-            cardView.setTitleText(iconString+"  "+movie.getName());
-            cardView.setContentText(dateString+"  "+movie.getAccount().getDisplayName());
-            cardView.setMainImageDimensions(CARD_WIDTH, CARD_HEIGHT);
-
-            //TODO support blurring of thumbnail based on user account settings.
-            Log.i(TAG,"thumbnailpath "+movie.getAccount().getHost()+movie.getThumbnailPath());
-            Glide.with(viewHolder.view.getContext())
-                    .load("https://"+movie.getAccount().getHost()+movie.getThumbnailPath())
-                    .centerCrop()
-                    .error(mDefaultCardImage)
-                    .into(cardView.getMainImageView());
         }
     }
-
     @Override
     public void onUnbindViewHolder(Presenter.ViewHolder viewHolder) {
         Log.d(TAG, "onUnbindViewHolder");

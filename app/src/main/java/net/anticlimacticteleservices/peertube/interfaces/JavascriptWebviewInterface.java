@@ -40,6 +40,6 @@ public class JavascriptWebviewInterface {
     }
     @JavascriptInterface
     public void debug(String g){
-        Log.d("wtf","Console:"+g);
+        Log.d("Javascript Interface","Console:"+g);
     }
 }

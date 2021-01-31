@@ -210,11 +210,11 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
 
         if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
             setContentView(R.layout.activity_video_play_webview);
-            Log.e("WTF","using full screen webview");
+            Log.e(TAG,"using full screen webview");
         }
         else {
             setContentView(R.layout.activity_video_play);
-            Log.e("WTF","using normal activiy view ");
+            Log.e(TAG,"using normal activiy view ");
         }
         // get video ID
         Intent intent = getIntent();
@@ -485,7 +485,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
         String backgroundBehavior = sharedPref.getString(getString(R.string.pref_background_behavior_key), getString(R.string.pref_background_stop_key));
-        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),false)){
+        if (sharedPref.getBoolean(getString(R.string.pref_webview_player_key),true)){
             if (backgroundBehavior.equals(getString(R.string.pref_background_stop_key))) {
                 Log.v(TAG, "stop the video based on setting");
                 super.onBackPressed();
@@ -594,19 +594,19 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
             return super.dispatchKeyEvent(event);
         }
         View current = getCurrentFocus();
-        Log.i("WTF", String.valueOf(current));
+        Log.i(TAG, String.valueOf(current));
         if (current != null){
             current.clearFocus();
             webviewFragment.getWebView().requestFocus();
-            Log.i("WTF","requesting focus");
+            Log.i(TAG,"requesting focus");
         }
-        Log.i("WTF", String.valueOf(event.getKeyCode()) + KeyEvent.keyCodeToString(event.getKeyCode()));
+        Log.i(TAG, String.valueOf(event.getKeyCode()) + KeyEvent.keyCodeToString(event.getKeyCode()));
 
         int code = event.getKeyCode();
         int act = event.getAction();
         //center button
         if ((act == KeyEvent.ACTION_UP) && code == 23){
-            Log.i("WTF","center button clicked");
+            Log.i(TAG,"center button clicked");
             if (menu){
                 menu=false;
                 return true;
@@ -614,16 +614,16 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
             if (!playing){
                 webviewFragment.play();
                 playing=true;
-                Log.i("WTF", "playing video");
+                Log.i(TAG, "playing video");
             } else {
                 webviewFragment.pauseVideo();
                 playing = false;
-                Log.i("WTF", "pausing video");
+                Log.i(TAG, "pausing video");
             }
         }
         //menu
         if ((act == KeyEvent.ACTION_DOWN && code ==82) || (code==23 && event.isLongPress()))  {
-            Log.e("WTF","need to bring up menu");
+            Log.e(TAG,"need to bring up menu");
             FragmentManager fragmentManager = getSupportFragmentManager();
             videoMetaDataFragment = (VideoMetaDataFragment) fragmentManager.findFragmentById(R.id.video_meta_data_fragment);
             if (videoMetaDataFragment != null) {
@@ -632,10 +632,10 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
                         .setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out);
                 if (!videoMetaDataFragment.isVisible()) {
                     transaction.show(videoMetaDataFragment);
-                    Log.e("WTF","showing meta");
+                    Log.e(TAG,"showing meta");
                 } else {
                     transaction.hide(videoMetaDataFragment);
-                    Log.e("WTF","hiding meta");
+                    Log.e(TAG,"hiding meta");
                 }
                 transaction.commit();
             }
@@ -645,15 +645,15 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         }
         //back
         if ((act == KeyEvent.ACTION_DOWN && (code == 286 || code == 21 || code ==88 ))){
-            Log.e("WTF","need to backup 10 seconds, videojs player handling");
+            Log.e(TAG,"need to backup 10 seconds, videojs player handling");
         }
         //forward
         if ((act == KeyEvent.ACTION_DOWN && (code == 287 || code == 22 || code ==87 ))){
-            Log.e("WTF","need to advance 10 seconds, videojs player handling");
+            Log.e(TAG,"need to advance 10 seconds, videojs player handling");
         }
         //up
         if ((act == KeyEvent.ACTION_DOWN && (code == 288 || code == 19))){
-            Log.e("WTF","videojs raise volume 10 percent, currently disabled");
+            Log.e(TAG,"videojs raise volume 10 percent, currently disabled");
             switch (speed){
                 case ".5":
                     speed=".75";
@@ -677,7 +677,7 @@ public class VideoPlayActivity extends AppCompatActivity implements  PopupMenu.O
         }
         //DOWN
         if ((act == KeyEvent.ACTION_DOWN && (code == 289 || code == 20))){
-            Log.e("WTF","videojs lowers volume 10 percent, currently disabled");
+            Log.e(TAG,"videojs lowers volume 10 percent, currently disabled");
             switch (speed){
                 case ".75":
                     speed=".5";

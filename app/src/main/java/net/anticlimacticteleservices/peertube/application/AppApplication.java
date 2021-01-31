@@ -62,7 +62,7 @@ public class AppApplication extends Application {
             }
         }
         seeds.add(seedToAdd);
-        Log.e("WTF","added a new web seed seed "+seeds.size());
+        //Log.e(TAG,"added a new web seed seed "+seeds.size());
     }
     public static Context getContext() {
         return instance.getApplicationContext();

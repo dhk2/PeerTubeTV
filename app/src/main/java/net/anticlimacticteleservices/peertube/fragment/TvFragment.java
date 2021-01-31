@@ -1,7 +1,6 @@
 package net.anticlimacticteleservices.peertube.fragment;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 
 import android.content.DialogInterface;
@@ -27,9 +26,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.leanback.app.BackgroundManager;
 import androidx.leanback.app.BrowseFragment;
 import androidx.leanback.widget.ArrayObjectAdapter;
@@ -41,11 +38,6 @@ import androidx.leanback.widget.OnItemViewSelectedListener;
 import androidx.leanback.widget.Presenter;
 import androidx.leanback.widget.Row;
 import androidx.leanback.widget.RowPresenter;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.lifecycle.ViewModelStore;
-import androidx.lifecycle.ViewModelStoreOwner;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.drawable.GlideDrawable;
@@ -65,10 +57,12 @@ import net.anticlimacticteleservices.peertube.database.ServerRoomDatabase;
 import net.anticlimacticteleservices.peertube.database.ServerViewModel;
 import net.anticlimacticteleservices.peertube.helper.APIUrlHelper;
 import net.anticlimacticteleservices.peertube.helper.ErrorHelper;
+import net.anticlimacticteleservices.peertube.model.Channel;
+import net.anticlimacticteleservices.peertube.model.ChannelList;
 import net.anticlimacticteleservices.peertube.model.LeanBackHeaderCategory;
-import net.anticlimacticteleservices.peertube.model.ServerList;
 import net.anticlimacticteleservices.peertube.model.Video;
 import net.anticlimacticteleservices.peertube.model.VideoList;
+import net.anticlimacticteleservices.peertube.network.GetChannelService;
 import net.anticlimacticteleservices.peertube.network.GetUserService;
 import net.anticlimacticteleservices.peertube.network.GetVideoDataService;
 import net.anticlimacticteleservices.peertube.network.RetrofitInstance;
@@ -86,11 +80,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static net.anticlimacticteleservices.peertube.R.color.lb_action_text_color;
-import static net.anticlimacticteleservices.peertube.R.color.lb_basic_card_bg_color;
 import static net.anticlimacticteleservices.peertube.R.color.lb_basic_card_content_text_color;
-import static net.anticlimacticteleservices.peertube.R.color.lb_basic_card_title_text_color;
-import static net.anticlimacticteleservices.peertube.R.color.lb_tv_white;
 import static net.anticlimacticteleservices.peertube.activity.VideoListActivity.EXTRA_VIDEOID;
 import static net.anticlimacticteleservices.peertube.activity.VideoListActivity.SWITCH_INSTANCE;
 
@@ -168,10 +158,10 @@ public class TvFragment extends BrowseFragment {
         ServerDao mServerDao = db.serverDao();
         currentServer = APIUrlHelper.getUrl(getContext());
         allServers = mServerDao.getDeadServers();
-        Log.e("wtf","current server");
+        Log.e(TAG,"current server");
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
         currentUser=sharedPref.getString(getString(R.string.pref_auth_username),"");
-        Log.e("wtf","current user"+currentUser);
+        Log.e(TAG,"current user"+currentUser);
         //allServers.clear();
         if (allServers.size()==0){
             Server newServer=new Server("The Grand Illusion");
@@ -192,8 +182,8 @@ public class TvFragment extends BrowseFragment {
             newServer.setPassword("");
             mServerDao.insert(newServer);
 
-            newServer=new Server("OpenTube");
-            newServer.setServerHost("https://open.tube");
+            newServer=new Server("Pony.Tube");
+            newServer.setServerHost("https://pony.tube/");
             newServer.setUsername("");
             newServer.setPassword("");
             mServerDao.insert(newServer);
@@ -201,7 +191,7 @@ public class TvFragment extends BrowseFragment {
         }
         allServers = mServerDao.getDeadServers();
         for (Server server:allServers){
-            Log.e("wtf",server.toString());
+            Log.e(TAG,server.toString());
         }
     }
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -241,11 +231,18 @@ public class TvFragment extends BrowseFragment {
         pullVideos(head,0,10,"-likes",null);
         ui.add(head);
         loadRows();
+
+        head = new LeanBackHeaderCategory("Channels");
+        head.setLoading(true);
+        head.setAdapterIndex(ui.size());
+        pullChannels(head,0,10);
+        ui.add(head);
+        loadRows();
     }
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void loadRows() {
         int selected=-1;
-        Log.e("wtf","server base url"+apiBaseURL);
+        Log.e(TAG,"server base url"+apiBaseURL);
         ArrayObjectAdapter rowsAdapter = new ArrayObjectAdapter(new ListRowPresenter());
         CardPresenter cardPresenter = new CardPresenter();
 
@@ -253,6 +250,17 @@ public class TvFragment extends BrowseFragment {
             ArrayObjectAdapter listRowAdapter = new ArrayObjectAdapter(cardPresenter);
             if (head.getVideos().size()>0) {
                 for (Video item : head.getVideos()) {
+                    listRowAdapter.add(item);
+                }
+                HeaderItem headerItem = new HeaderItem(head.getName());
+                ListRow toAdd = new ListRow(headerItem, listRowAdapter);
+                rowsAdapter.add(toAdd);
+                head.setAdapterIndex(rowsAdapter.indexOf(toAdd));
+                Log.e("wth",head.getAdapterIndex()+" should be "+head.getName());
+
+            }
+            if (head.getChannels().size()>0) {
+                for (Channel item : head.getChannels()) {
                     listRowAdapter.add(item);
                 }
                 HeaderItem headerItem = new HeaderItem(head.getName());
@@ -409,7 +417,7 @@ public class TvFragment extends BrowseFragment {
                 } else {
                     //change to selected server
                     String serverUrl = APIUrlHelper.cleanServerUrl(server.getServerHost());
-                    Log.e("WTF", server.getServerHost() + " == " + currentServer+ " and furthermore "+server.getUsername()+"  ==  "+currentUser);
+                    Log.e(TAG, server.getServerHost() + " == " + currentServer+ " and furthermore "+server.getUsername()+"  ==  "+currentUser);
                     currentUser=server.getUsername();
                     Log.e("just before put",serverUrl+"><"+currentUser+"\n"+server.toString());
                     editor.putString(getContext().getString(R.string.pref_api_base_key), serverUrl);
@@ -478,13 +486,13 @@ public class TvFragment extends BrowseFragment {
                 Object item,
                 RowPresenter.ViewHolder rowViewHolder,
                 Row row) {
-            Log.e("wtf","on item selected");
+            Log.e(TAG,"on item selected");
             if (Session.getInstance().isLoggedIn() && !subscriptions) {
                 drawWhenLoaded=true;
                 getHistoryAndSubscriptions();
             }
             if (item instanceof Server){
-                Log.e("WTF", ((Server) item).getServerHost() + " == " + currentServer+ " and furthermore "+ ((Server) item).getUsername()+"  ==  "+currentUser);
+                Log.e(TAG, ((Server) item).getServerHost() + " == " + currentServer+ " and furthermore "+ ((Server) item).getUsername()+"  ==  "+currentUser);
             }
             if (item instanceof Video) {
                 currentRow= row.getHeaderItem().getName();
@@ -508,7 +516,7 @@ public class TvFragment extends BrowseFragment {
                     if ((!test.isLoading()) && (test.getName().equals(currentRow))){
                         rowPosition = test.getVideos().indexOf((Video)item);
                         rowSize = test.getVideos().size();
-                        Log.e("WTF",rowPosition+" of "+rowSize+ "current row "+currentRowNumber+"  "+currentVideo.getName());
+                        Log.e(TAG,rowPosition+" of "+rowSize+ "current row "+currentRowNumber+"  "+currentVideo.getName());
                         if ((rowSize-rowPosition)<10){
                             switch (test.getName()) {
                                 case "Chronological":
@@ -680,7 +688,7 @@ public class TvFragment extends BrowseFragment {
         for ( LeanBackHeaderCategory head : ui){
            ListRow listRow = (ListRow) getAdapter().get(head.getAdapterIndex());
            ArrayObjectAdapter listRowAdapter = (ArrayObjectAdapter) listRow.getAdapter();
-            Log.e("WTF", head.getName()+" "+head.getVideos().size()+" "+head.getAdapterIndex()+"  "+listRow.getAdapter().size());
+            Log.e(TAG, head.getName()+" "+head.getVideos().size()+" "+head.getAdapterIndex()+"  "+listRow.getAdapter().size());
             if (head.getVideos().size()>listRow.getAdapter().size()) {
                 for (Video item : head.getVideos()) {
                     listRowAdapter.add(item);
@@ -756,7 +764,7 @@ public class TvFragment extends BrowseFragment {
         Call<VideoList> call;
         call = userService.getVideosSubscripions(0,50, "-createdAt");
 
-        Log.d("WTF","subscriptions URL Called"+ call.request().url() + "");
+        Log.d(TAG,"subscriptions URL Called"+ call.request().url() + "");
         call.enqueue(new Callback<VideoList>() {
             @RequiresApi(api = Build.VERSION_CODES.M)
             @Override
@@ -764,13 +772,13 @@ public class TvFragment extends BrowseFragment {
                 if (response.body() != null) {
                     ArrayList<Video> videoList = response.body().getVideoArrayList();
                     if (videoList != null) {
-                        Log.e("wtf", headsub.getName()+" is getting response, adding "+videoList.size());
+                        Log.e(TAG, headsub.getName()+" is getting response, adding "+videoList.size());
                         headsub.addAllVideo(videoList);
                         //loadRows();
                         headsub.setLoading(false);
                     }
                 } else {
-                    Log.e("WTF", "subscripotions failed to load");
+                    Log.e(TAG, "subscripotions failed to load");
                 }
                 headsub.setLoading(false);
                 if (drawWhenLoaded) {
@@ -795,21 +803,21 @@ public class TvFragment extends BrowseFragment {
         headHistory.setLoading(true);
         call = userService.getVideosHistory(0,50, null);
 
-        Log.d("WTF","history URL Called"+ call.request().url() + "");
+        Log.d(TAG,"history URL Called"+ call.request().url() + "");
         call.enqueue(new Callback<VideoList>() {
             @Override
             public void onResponse(@NonNull Call<VideoList> call, @NonNull Response<VideoList> response) {
                 if (response.body() != null) {
                     ArrayList<Video> videoList = response.body().getVideoArrayList();
                     if (videoList != null) {
-                        Log.e("wtf", headHistory.getName()+" is getting response history adding "+videoList.size());
+                        Log.e(TAG, headHistory.getName()+" is getting response history adding "+videoList.size());
                         headHistory.addAllVideo(videoList);
                         loadRows();
                         headHistory.setLoading(false);
                     }
                 }
                 else {
-                    Log.e("WTF", "history failed to load");
+                    Log.e(TAG, "history failed to load");
                 }
                 headHistory.setLoading(false);
                 if (drawWhenLoaded) {
@@ -830,5 +838,68 @@ public class TvFragment extends BrowseFragment {
             }
         });
         ui.add(headHistory);
+    }
+
+
+
+
+
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void pullChannels(LeanBackHeaderCategory header, int start, int count) {
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getContext());
+        String nsfw = sharedPref.getBoolean(getString(R.string.pref_show_nsfw_key), false) ? "both" : "false";
+        Set<String> languages = sharedPref.getStringSet(getString(R.string.pref_video_language_key), null);
+        apiBaseURL = APIUrlHelper.getUrlWithVersion(getContext());
+        GetVideoDataService service = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetVideoDataService.class);
+        GetUserService userService = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetUserService.class);
+        GetChannelService channelService = RetrofitInstance.getRetrofitInstance(apiBaseURL).create(GetChannelService.class);
+        Call<ChannelList> call;
+        call = channelService.getChannels(start,count, "-createdAt");
+        /*Log the URL called*/
+        Log.d("URL Called", call.request().url() + "");
+        call.enqueue(new Callback<ChannelList>() {
+            @Override
+            public void onResponse(@NonNull Call<ChannelList> call, @NonNull Response<ChannelList> response) {
+                if (response.body() != null) {
+                    ArrayList<Channel> channels = response.body().getChannelArrayList();
+                    header.setLoading(false);
+                    if (channels != null) {
+                        Log.e("wth", header.getName()+" adding "+channels.size()+" to "+header.getName()+" at index "+header.getAdapterIndex());
+                        header.addAllChannels(channels);
+                        if (getAdapter().size()>header.getAdapterIndex()) {
+                            ListRow listRow = (ListRow) getAdapter().get(header.getAdapterIndex());
+                            Log.e("WTH", listRow.getHeaderItem().getName() + " list row should be " + header.getName());
+                            ArrayObjectAdapter listRowAdapter = (ArrayObjectAdapter) listRow.getAdapter();
+                            Log.e("wth", String.valueOf(listRowAdapter.size()));
+                            for (Channel toAdd : channels) {
+                                listRowAdapter.add(toAdd);
+                            }
+                        }
+                        if (drawWhenLoaded) {
+                            boolean allLoaded=true;
+                            for (LeanBackHeaderCategory head : ui) {
+                                if (head.isLoading()){
+                                    allLoaded=false;
+                                }
+                            }
+                            if (allLoaded){
+                                drawWhenLoaded=false;
+                                loadRows();
+                            }
+                        }
+                    }
+
+
+                } else {
+                    Log.e(TAG, "null response");
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<ChannelList> call, @NonNull Throwable t) {
+                Log.wtf("err", t.fillInStackTrace());
+                ErrorHelper.showToastFromCommunicationError( getContext(), t );
+            }
+        });
     }
 }

@@ -12,7 +12,7 @@ import android.util.Log;
 import net.anticlimacticteleservices.peertube.R;
 
 public class TvActivity extends Activity {
-
+    String TAG = "TvActivity";
     @Override
     public void onCreate(Bundle savedInstanceState) {
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -20,13 +20,13 @@ public class TvActivity extends Activity {
 
         UiModeManager uiMode = (UiModeManager) getSystemService(UI_MODE_SERVICE);
         if(uiMode.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-            Log.e("wtf", "tv verified");
+            Log.e(TAG, "tv verified");
         }
          else if (forceTV) {
-            Log.e("wtf", "tv forced");
+            Log.e(TAG, "tv forced");
         }
          else {
-            Log.e("wtf", "not on tv");
+            Log.e(TAG, "not on tv");
             //then start phone
             Intent intentSettings = new Intent(this, VideoListActivity.class);
             this.startActivity(intentSettings);

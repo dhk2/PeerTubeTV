@@ -35,13 +35,15 @@
         android:visibility="gone" />
 
 
-    <EditText
-        android:id="@+id/search_server_input_field"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/server_selection_filter_hint"
-        android:singleLine="true"
-        android:imeOptions="actionGo"/>
+        <EditText
+            android:id="@+id/search_server_input_field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints=""
+            android:hint="@string/server_selection_filter_hint"
+            android:imeOptions="actionGo"
+            android:inputType="textWebEditText"
+            android:singleLine="true" />
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/serversSwipeRefreshLayout"

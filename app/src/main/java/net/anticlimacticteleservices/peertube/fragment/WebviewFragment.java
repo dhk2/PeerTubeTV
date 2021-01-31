@@ -172,7 +172,7 @@ public class WebviewFragment extends Fragment {
 
                             case R.id.cancel:
 
-                                Log.e("WTF","figure out cancel");
+                                Log.e(TAG,"figure out cancel");
                                 return true;
                             default:
                                 return false;
@@ -206,10 +206,10 @@ public class WebviewFragment extends Fragment {
                     }
 
                     public void onProgressChanged(WebView view, int progress) {
-                        Log.e("WTF", "progress " + progress);
+                        Log.e(TAG, "progress " + progress);
                         webView.requestFocus();
                         if (progress == 100) {
-                            Log.e("WTF", "progress " + progress);
+                            Log.e(TAG, "progress " + progress);
                             webView.requestFocus();
                             autoPlay();
                         }
@@ -244,12 +244,12 @@ public class WebviewFragment extends Fragment {
                 if (s.length()>2) {
                     smashes++;
                     if (smashes==5000){
-                        Log.e("wtf","play commnand not working, returning "+s);
+                        Log.e(TAG,"play commnand not working, returning "+s);
                     }
                     bruteForcePlay();
                 }
                 else{
-                    Log.d("WTF", "exiting smash loop after "+smashes +" smashes because finally got <" + s+">"+s.length());
+                    Log.d(TAG, "exiting smash loop after "+smashes +" smashes because finally got <" + s+">"+s.length());
                     smashes=0;
                     playing=true;
                 }
@@ -261,7 +261,7 @@ public class WebviewFragment extends Fragment {
         webView.evaluateJavascript("javascript:videojsPlayer.play() ", new ValueCallback<String>() {
             @Override
             public void onReceiveValue(String s) {
-                Log.e("wtf","play: "+s);
+                Log.e(TAG,"play: "+s);
                 playing=true;
             }
         });
@@ -285,7 +285,7 @@ public class WebviewFragment extends Fragment {
         webView.evaluateJavascript("javascript:videojsPlayer.pause() ", new ValueCallback<String>() {
             @Override
             public void onReceiveValue(String s) {
-                    Log.d("WTF", "pausing video <" + s+">"+s.length());
+                    Log.d(TAG, "pausing video <" + s+">"+s.length());
                 }
         });
     }
@@ -293,7 +293,7 @@ public class WebviewFragment extends Fragment {
         webView.evaluateJavascript("javascript:videojsPlayer.hide() ", new ValueCallback<String>() {
             @Override
             public void onReceiveValue(String s) {
-                Log.d("WTF", "hiding video <" + s+">"+s.length());
+                Log.d(TAG, "hiding video <" + s+">"+s.length());
             }
         });
     }
@@ -301,7 +301,7 @@ public class WebviewFragment extends Fragment {
         webView.evaluateJavascript("javascript:videojsPlayer.show() ", new ValueCallback<String>() {
             @Override
             public void onReceiveValue(String s) {
-                Log.d("WTF", "showing video <" + s+">"+s.length());
+                Log.d(TAG, "showing video <" + s+">"+s.length());
             }
         });
     }
@@ -313,12 +313,12 @@ public class WebviewFragment extends Fragment {
                 if (s.length()>2) {
                     smashes++;
                     if (smashes==5000){
-                        Log.e("wtf","autoplay commnand not working, returning "+s);
+                        Log.e(TAG,"autoplay commnand not working, returning "+s);
                     }
                     bruteForcePlay();
                 }
                 else{
-                    Log.d("WTF", "exiting smash loop after "+smashes +" smashes because finally got <" + s+">"+s.length());
+                    Log.d(TAG, "exiting smash loop after "+smashes +" smashes because finally got <" + s+">"+s.length());
                     smashes=0;
                     playing=true;
                 }

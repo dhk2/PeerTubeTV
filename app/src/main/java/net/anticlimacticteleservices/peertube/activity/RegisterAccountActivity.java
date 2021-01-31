@@ -110,6 +110,10 @@ public class RegisterAccountActivity extends CommonActivity {
         newUserName.setText(intent.getStringExtra(Intent.EXTRA_USER));
         String serverUrl=intent.getStringExtra(Intent.EXTRA_ORIGINATING_URI);
         String serverLabel=intent.getStringExtra(Intent.EXTRA_TITLE);
+        String TAG="TvActivity";
+        newUserName.setText("log tester ");
+        newUserPassword.setText("password");
+        newUseremail.setText("noreply@this.com");
 
         ServerViewModel
         mServerViewModel = new ViewModelProvider(this).get(ServerViewModel.class);
@@ -120,9 +124,9 @@ public class RegisterAccountActivity extends CommonActivity {
         callConfig.enqueue(new Callback<ServerConfig>() {
             @Override
             public void onResponse(Call<ServerConfig> call, Response<ServerConfig> response) {
-                Log.e("wtf","loaded config "+response.raw());
+                Log.e(TAG,"loaded config "+response.raw());
                 ServerConfig thisServer = response.body();
-                Log.e("WTF",thisServer.getInstance().getName()+"  "+thisServer.getInstance().getShortDescription());
+                Log.e(TAG,thisServer.getInstance().getName()+"  "+thisServer.getInstance().getShortDescription());
                 if (!thisServer.getSignup().isAllowed()){
                     Toast.makeText(getContext(), "Server not allowing new accounts", Toast.LENGTH_SHORT).show();
                     finish();
@@ -135,7 +139,7 @@ public class RegisterAccountActivity extends CommonActivity {
 
             @Override
             public void onFailure(Call<ServerConfig> call, Throwable t) {
-                Log.e("wtf"," failed to load config "+t.toString());
+                Log.e(TAG," failed to load config "+t.toString());
                 Toast.makeText(getContext(), t.toString(), Toast.LENGTH_SHORT).show();
             }
         });
@@ -144,26 +148,18 @@ public class RegisterAccountActivity extends CommonActivity {
         callAbout.enqueue(new Callback<ServerAbout>() {
             @Override
             public void onResponse(Call<ServerAbout> call, Response<ServerAbout> response) {
-                Log.e("wtf","loaded config "+response.raw());
+                Log.e(TAG,"loaded config "+response.raw());
                 ServerAbout serverAbout = response.body();
-                Log.e("WTF",serverAbout.getInstance().getName()+"  "+serverAbout.getInstance().getTerms());
+                Log.e(TAG,serverAbout.getInstance().getName()+"  "+serverAbout.getInstance().getTerms());
                 serverTerms=serverAbout.getInstance().getTerms();
             }
 
             @Override
             public void onFailure(Call<ServerAbout> call, Throwable t) {
-                Log.e("wtf"," failed to load config "+t.toString());
+                Log.e(TAG," failed to load config "+t.toString());
                 Toast.makeText(getContext(), t.toString(), Toast.LENGTH_SHORT).show();
             }
         });
-
-
-
-
-
-
-
-
 
         createUserButton.setEnabled(false);
         createUserButton.setOnClickListener(view -> {
@@ -186,6 +182,12 @@ public class RegisterAccountActivity extends CommonActivity {
                 Toast.makeText(this,"user name can't be blank", Toast.LENGTH_LONG).show();
                 formValid = false;
             }
+            Log.e(TAG, String.valueOf(userName.indexOf(" ")));
+            if (userName.indexOf(" ")>0){
+                newUserName.setError( getString(R.string.prompt_name_space ));
+                Toast.makeText(this,"No spaces allowed in user names", Toast.LENGTH_LONG).show();
+                formValid = false;
+            }
 
             String email = newUseremail.getText().toString();
 
@@ -198,7 +200,7 @@ public class RegisterAccountActivity extends CommonActivity {
 
             if (formValid) {
                 String password = newUserPassword.getText().toString();
-                Log.e("WTF","need to create user:["+userName+"]["+password+"]["+email+"]");
+                Log.e(TAG,"need to create user:["+userName+"]["+password+"]["+email+"]");
                 String registerApiBaseURL = APIUrlHelper.getUrlWithVersion(this);
                 GetUserService registerService = RetrofitInstance.getRetrofitInstance(registerApiBaseURL).create(GetUserService.class);
                 Call<Result> registerCall = registerService.registerUser(userName,email,password);
@@ -206,10 +208,10 @@ public class RegisterAccountActivity extends CommonActivity {
                     @Override
                     public void onResponse(Call<Result> call, Response<Result> response) {
                         //Toast.makeText(getApplicationContext(), response.toString(), Toast.LENGTH_LONG).show();
-                        Log.e("WTF", "succeeded"+response);
+                        Log.e(TAG, "succeeded"+response);
                         switch (response.code()){
                             case 204:
-                                Log.e("wtf","new account created");
+                                Log.e(TAG,"new account created");
                                 Server proposedServer= TvFragment.getEditServer();
                                 if (null==proposedServer){
                                    proposedServer=new Server(serverLabel);
@@ -218,7 +220,7 @@ public class RegisterAccountActivity extends CommonActivity {
                                 proposedServer.setUsername(userName);
                                 proposedServer.setPassword(password);
 
-                                Log.e("wtf",proposedServer.toString());
+                                Log.e(TAG,proposedServer.toString());
 
                                 mServerViewModel.insert(proposedServer);
 
@@ -235,7 +237,7 @@ public class RegisterAccountActivity extends CommonActivity {
                                 }
 
 
-                                Log.e("wtf","attemptig to logon with "+proposedServer.getUsername());
+                                Log.e(TAG,"attemptig to logon with "+proposedServer.getUsername());
                                 LoginService.Authenticate(
                                         proposedServer.getUsername(),
                                         proposedServer.getPassword()
@@ -250,14 +252,16 @@ public class RegisterAccountActivity extends CommonActivity {
 
                                 break;
                             case 409:
-                                Log.e("wtf","Account or email already exists");
+                                Log.e(TAG,"Account or email already exists");
                                 Toast.makeText(getApplicationContext(),"Account name or email already exists on instance", Toast.LENGTH_SHORT).show();
                                 break;
                             case 400:
-                                Log.e("wtf","400 error could mean password too short");
+                                Log.e(TAG,"400 error could mean password too short");
+                                Log.e(TAG,response.message()+" "+response.errorBody()+response.raw());
                                 Toast.makeText(getApplicationContext(),"Error 400, check email address is valid ad passe", Toast.LENGTH_SHORT).show();
+                                break;
                             default:
-                                Log.e("wtf",response.message()+" "+response.errorBody());
+                                Log.e(TAG,response.message()+" "+response.errorBody()+response.raw());
                                 Toast.makeText(getApplicationContext(),"failed to create account on remote server", Toast.LENGTH_SHORT).show();
                         }
                     }
@@ -265,8 +269,8 @@ public class RegisterAccountActivity extends CommonActivity {
                     @Override
                     public void onFailure(Call<Result> call, Throwable t) {
                         Toast.makeText(getApplicationContext(), t.toString(), Toast.LENGTH_LONG).show();
-                        Log.e("WTF", "failed");
-                        Log.e("WTF", t.getMessage()+"\n"+t.getLocalizedMessage());
+                        Log.e(TAG, "failed");
+                        Log.e(TAG, t.getMessage()+"\n"+t.getLocalizedMessage());
                     }
                 });
             }
@@ -278,7 +282,20 @@ public class RegisterAccountActivity extends CommonActivity {
             terms.setText(serverTerms);
             terms.setVisibility(View.VISIBLE);
             createUserButton.setEnabled(true);
+            createUserButton.requestFocus();
         });
 
+    }
+    void closeKeyboard(){
+        // close keyboard
+        try {
+            InputMethodManager inputManager = (InputMethodManager)
+                    this.getSystemService(Context.INPUT_METHOD_SERVICE);
+
+            inputManager.hideSoftInputFromWindow(Objects.requireNonNull(this.getCurrentFocus()).getWindowToken(),
+                    InputMethodManager.HIDE_NOT_ALWAYS);
+        } catch (Exception e) {
+
+        }
     }
 }

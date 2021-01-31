@@ -43,6 +43,7 @@
     <string name="prompt_email">Email / Username</string>
     <string name="prompt_password">Password</string>
     <string name="prompt_name">User Name</string>
+    <string name="prompt_name_space">no spaces in name</string>
     <string name="action_sign_in">Sign in</string>
     <string name="action_add_user">Create User</string>
     <string name="action_sign_in_short">Sign in</string>
